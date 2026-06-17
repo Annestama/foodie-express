@@ -25,6 +25,8 @@ from views.user_views import (
     MenuFrame,
     KeranjangFrame,
     RiwayatFrame,
+    LoginFrame,
+    RegisterFrame,
 )
 
 
@@ -71,20 +73,17 @@ class UserApp(tk.Tk):
         self.db = DatabaseManager()
         seed()  # Otomatis skip jika sudah terisi
 
-        # ---- Inisialisasi Pelanggan (implementasi Abstraksi) ----
-        self.pelanggan = Pelanggan(nama="Zildjian Annesta", app_root=self)
-        self.pelanggan.tampilkan_dashboard()
-
-        # ---- State session ----
+        # ---- State session (Pelanggan di-set setelah login) ----
+        self.pelanggan = None
         self.keranjang = KeranjangBelanja()
         self.current_restoran_id = None
-        self.nama_pemesan = self.pelanggan.nama  # Default sama dengan nama pelanggan
+        self.nama_pemesan = ""
 
         # ---- Konfigurasi Window ----
         self.title("FoodOrder -- Aplikasi Pelanggan")
         self.geometry("1000x700")
         self.minsize(900, 600)
-        self.configure(bg="#0f0f1a")
+        self.configure(bg="#f4f1ea")
 
         # Center window
         self.update_idletasks()
@@ -96,15 +95,15 @@ class UserApp(tk.Tk):
         self._setup_ttk_styles()
 
         # ---- Container untuk semua frame ----
-        self.container = tk.Frame(self, bg="#0f0f1a")
+        self.container = tk.Frame(self, bg="#f4f1ea")
         self.container.pack(fill="both", expand=True)
 
         # ---- Buat semua frame ----
         self.frames = {}
         self._init_frames()
 
-        # ---- Tampilkan dashboard awal ----
-        self.show_frame("DashboardFrame")
+        # ---- Tampilkan login awal ----
+        self.show_frame("LoginFrame")
 
         # ---- Handle close ----
         self.protocol("WM_DELETE_WINDOW", self.on_close)
@@ -114,26 +113,40 @@ class UserApp(tk.Tk):
         style = ttk.Style()
         style.theme_use("clam")
         style.configure("TScrollbar",
-                        background="#2a2a3e",
-                        troughcolor="#0f0f1a",
-                        arrowcolor="#8892a4",
+                        background="#d1cec7",
+                        troughcolor="#f4f1ea",
+                        arrowcolor="#808a8d",
                         borderwidth=0)
         style.configure("TCombobox",
-                        fieldbackground="#252540",
-                        background="#252540",
-                        foreground="#f0f0f0",
-                        selectbackground="#7c3aed",
+                        fieldbackground="#faf9f6",
+                        background="#faf9f6",
+                        foreground="#3a4042",
+                        selectbackground="#a594f9",
                         selectforeground="#ffffff")
         style.map("TCombobox",
-                  fieldbackground=[("readonly", "#252540")],
-                  foreground=[("readonly", "#f0f0f0")])
+                  fieldbackground=[("readonly", "#faf9f6")],
+                  foreground=[("readonly", "#3a4042")])
 
     def _init_frames(self):
-        """Inisialisasi semua frame halaman."""
+        """Inisialisasi semua frame halaman awal."""
+        for FrameClass in (LoginFrame, RegisterFrame):
+            frame = FrameClass(self.container, self)
+            self.frames[FrameClass.__name__] = frame
+            frame.place(relwidth=1, relheight=1)
+
+    def on_login_success(self, user_data):
+        """Dipanggil setelah login berhasil."""
+        self.pelanggan = Pelanggan(nama=user_data['nama_lengkap'], app_root=self)
+        self.nama_pemesan = self.pelanggan.nama
+        
+        # Inisialisasi frame utama setelah login
         for FrameClass in (DashboardFrame, MenuFrame, KeranjangFrame, RiwayatFrame):
             frame = FrameClass(self.container, self)
             self.frames[FrameClass.__name__] = frame
             frame.place(relwidth=1, relheight=1)
+            
+        self.pelanggan.tampilkan_dashboard()
+        self.show_frame("DashboardFrame")
 
     def show_frame(self, frame_name: str):
         """Menampilkan frame tertentu ke depan."""
@@ -171,6 +184,20 @@ class UserApp(tk.Tk):
         self.current_restoran_id = None
         self.frames["DashboardFrame"].muat_restoran()
         self.show_frame("DashboardFrame")
+
+    def do_logout(self):
+        """Handle logout flow."""
+        self.pelanggan = None
+        self.nama_pemesan = ""
+        self.keranjang.kosongkan()
+        self.current_restoran_id = None
+        
+        # Clear login form
+        if "LoginFrame" in self.frames:
+            self.frames["LoginFrame"].username_var.set("")
+            self.frames["LoginFrame"].password_var.set("")
+            
+        self.show_frame("LoginFrame")
 
     def on_close(self):
         """Handle window close — stop semua polling."""

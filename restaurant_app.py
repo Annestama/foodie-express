@@ -59,12 +59,14 @@ class LoginFrame(tk.Frame):
     Kasir memilih restoran mana yang akan dikelola.
     """
 
-    BG_DARK    = "#0d0d18"
-    BG_CARD    = "#1a1a2e"
-    ACCENT     = "#f97316"
-    TEXT_WHITE = "#f0f0f0"
-    TEXT_MUTED = "#8892a4"
-    INPUT_BG   = "#252540"
+    BG_DARK    = "#f4f1ea"
+    BG_CARD    = "#faf9f6"
+    ACCENT     = "#e09f3e"
+    TEXT_PRIMARY = "#3a4042"
+    TEXT_MUTED = "#808a8d"
+    TEXT_WHITE = "#ffffff"
+    INPUT_BG   = "#ffffff"
+    BORDER_COLOR = "#d1cec7"
 
     def __init__(self, parent, controller):
         super().__init__(parent, bg=self.BG_DARK)
@@ -83,7 +85,7 @@ class LoginFrame(tk.Frame):
                  bg=self.BG_DARK, fg=self.ACCENT).pack()
         tk.Label(center, text="Restaurant",
                  font=("Segoe UI", 28, "bold"),
-                 bg=self.BG_DARK, fg=self.TEXT_WHITE).pack(pady=(8, 4))
+                 bg=self.BG_DARK, fg=self.TEXT_PRIMARY).pack(pady=(8, 4))
         tk.Label(center, text="Sistem Manajemen Pesanan Restoran",
                  font=("Segoe UI", 11),
                  bg=self.BG_DARK, fg=self.TEXT_MUTED).pack()
@@ -122,7 +124,7 @@ class LoginFrame(tk.Frame):
         self.nama_var = tk.StringVar(value="Admin Kasir")
         nama_entry = tk.Entry(center, textvariable=self.nama_var,
                               font=("Segoe UI", 12),
-                              bg=self.INPUT_BG, fg=self.TEXT_WHITE,
+                              bg=self.INPUT_BG, fg=self.TEXT_PRIMARY,
                               insertbackground=self.ACCENT,
                               relief="flat", bd=0)
         nama_entry.pack(fill="x", pady=(8, 0), ipady=10)
@@ -181,7 +183,7 @@ class RestaurantApp(tk.Tk):
         self.title("RestaurantOS -- Manajemen Pesanan")
         self.geometry("1200x750")
         self.minsize(1000, 650)
-        self.configure(bg="#0d0d18")
+        self.configure(bg="#f4f1ea")
 
         # Center window
         self.update_idletasks()
@@ -193,7 +195,7 @@ class RestaurantApp(tk.Tk):
         self._setup_ttk_styles()
 
         # ---- Container ----
-        self.container = tk.Frame(self, bg="#0d0d18")
+        self.container = tk.Frame(self, bg="#f4f1ea")
         self.container.pack(fill="both", expand=True)
 
         # ---- Tampilkan login screen ----
@@ -208,19 +210,19 @@ class RestaurantApp(tk.Tk):
         style = ttk.Style()
         style.theme_use("clam")
         style.configure("TScrollbar",
-                        background="#2a2a3e",
-                        troughcolor="#0d0d18",
-                        arrowcolor="#8892a4",
+                        background="#d1cec7",
+                        troughcolor="#f4f1ea",
+                        arrowcolor="#808a8d",
                         borderwidth=0)
         style.configure("TCombobox",
-                        fieldbackground="#252540",
-                        background="#252540",
-                        foreground="#f0f0f0",
-                        selectbackground="#f97316",
+                        fieldbackground="#ffffff",
+                        background="#ffffff",
+                        foreground="#3a4042",
+                        selectbackground="#e09f3e",
                         selectforeground="#ffffff")
         style.map("TCombobox",
-                  fieldbackground=[("readonly", "#252540")],
-                  foreground=[("readonly", "#f0f0f0")])
+                  fieldbackground=[("readonly", "#ffffff")],
+                  foreground=[("readonly", "#3a4042")])
 
     def masuk_dashboard(self, restoran: dict, nama_kasir: str):
         """Membuat Kasir dan masuk ke dashboard utama."""

@@ -16,24 +16,24 @@ from models.keranjang import KeranjangBelanja
 
 
 # ============================================================
-# KONSTANTA WARNA & STYLE (Dark Theme — User App)
+# KONSTANTA WARNA & STYLE (Lively Light Theme — User App)
 # ============================================================
-BG_DARK       = "#0f0f1a"
-BG_CARD       = "#1a1a2e"
-BG_CARD2      = "#16213e"
-BG_CARD3      = "#0d1117"
-ACCENT_GREEN  = "#00d4aa"
-ACCENT_PURPLE = "#7c3aed"
-ACCENT_CYAN   = "#06b6d4"
-TEXT_PRIMARY  = "#f0f0f0"
-TEXT_MUTED    = "#8892a4"
-TEXT_WHITE    = "#ffffff"
-BORDER_COLOR  = "#2a2a3e"
-SUCCESS_COLOR = "#10b981"
-WARNING_COLOR = "#f59e0b"
-DANGER_COLOR  = "#ef4444"
-INPUT_BG      = "#252540"
-HOVER_COLOR   = "#232340"
+BG_DARK       = "#f4f1ea"  # Soft cream/beige
+BG_CARD       = "#faf9f6"  # Off-white card
+BG_CARD2      = "#ebe7dd"  # Slightly darker header
+BG_CARD3      = "#dfdad0"  
+ACCENT_GREEN  = "#6b9080"  # Soft Matcha green
+ACCENT_PURPLE = "#a594f9"  # Soft Lavender
+ACCENT_CYAN   = "#73a5c6"  # Soft blue
+TEXT_PRIMARY  = "#3a4042"  # Soft charcoal
+TEXT_MUTED    = "#808a8d"  
+TEXT_WHITE    = "#ffffff"  
+BORDER_COLOR  = "#d1cec7"  
+SUCCESS_COLOR = "#6b9080"
+WARNING_COLOR = "#e09f3e"
+DANGER_COLOR  = "#e56b6f"
+INPUT_BG      = "#faf9f6"
+HOVER_COLOR   = "#f2efe9"
 
 FONT_TITLE  = ("Segoe UI", 20, "bold")
 FONT_HEADER = ("Segoe UI", 14, "bold")
@@ -79,6 +79,122 @@ def bind_mousewheel(widget, canvas):
 
 
 # ============================================================
+# FRAME AUTH: LOGIN & REGISTER
+# ============================================================
+class LoginFrame(tk.Frame):
+    def __init__(self, parent, controller):
+        super().__init__(parent, bg=BG_DARK)
+        self.controller = controller
+        self.db = controller.db
+        self._build_ui()
+
+    def _build_ui(self):
+        container = tk.Frame(self, bg=BG_DARK)
+        container.place(relx=0.5, rely=0.5, anchor="center")
+
+        tk.Label(container, text="FoodOrder", font=FONT_GIANT, bg=BG_DARK, fg=ACCENT_GREEN).pack(pady=(0, 10))
+        tk.Label(container, text="Login Pelanggan", font=FONT_TITLE, bg=BG_DARK, fg=TEXT_PRIMARY).pack(pady=(0, 30))
+
+        tk.Label(container, text="Username", font=FONT_BOLD, bg=BG_DARK, fg=TEXT_MUTED).pack(anchor="w")
+        self.username_var = tk.StringVar()
+        entry_usr = tk.Entry(container, textvariable=self.username_var, font=FONT_BODY,
+                             bg=INPUT_BG, fg=TEXT_PRIMARY, insertbackground=ACCENT_GREEN, relief="flat", bd=0)
+        entry_usr.pack(fill="x", pady=(4, 15), ipady=8)
+
+        tk.Label(container, text="Password", font=FONT_BOLD, bg=BG_DARK, fg=TEXT_MUTED).pack(anchor="w")
+        self.password_var = tk.StringVar()
+        entry_pwd = tk.Entry(container, textvariable=self.password_var, show="*", font=FONT_BODY,
+                             bg=INPUT_BG, fg=TEXT_PRIMARY, insertbackground=ACCENT_GREEN, relief="flat", bd=0, highlightthickness=1, highlightbackground=BORDER_COLOR, highlightcolor=ACCENT_GREEN)
+        entry_pwd.pack(fill="x", pady=(4, 5), ipady=8)
+
+        self.show_pwd_var = tk.BooleanVar(value=False)
+        def toggle_pwd():
+            entry_pwd.config(show="" if self.show_pwd_var.get() else "*")
+            
+        tk.Checkbutton(container, text="Show Password", variable=self.show_pwd_var, command=toggle_pwd,
+                       bg=BG_DARK, fg=TEXT_MUTED, activebackground=BG_DARK, activeforeground=TEXT_MUTED,
+                       selectcolor=BG_DARK, font=FONT_SMALL, relief="flat", bd=0).pack(anchor="w", pady=(0, 15))
+
+        styled_button(container, text="Login", command=self.do_login, bg=ACCENT_PURPLE, fg=TEXT_WHITE, width=20).pack(fill="x", pady=(0, 15))
+
+        btn_reg = tk.Label(container, text="Belum punya akun? Daftar di sini", font=FONT_BODY, bg=BG_DARK, fg=ACCENT_CYAN, cursor="hand2")
+        btn_reg.pack()
+        btn_reg.bind("<Button-1>", lambda e: self.controller.show_frame("RegisterFrame"))
+
+    def do_login(self):
+        usr = self.username_var.get().strip()
+        pwd = self.password_var.get().strip()
+        if not usr or not pwd:
+            messagebox.showwarning("Peringatan", "Username dan password harus diisi!")
+            return
+        
+        user_data = self.db.authenticate_user(usr, pwd)
+        if user_data:
+            self.controller.on_login_success(user_data)
+        else:
+            messagebox.showerror("Gagal", "Username atau password salah!")
+
+class RegisterFrame(tk.Frame):
+    def __init__(self, parent, controller):
+        super().__init__(parent, bg=BG_DARK)
+        self.controller = controller
+        self.db = controller.db
+        self._build_ui()
+
+    def _build_ui(self):
+        container = tk.Frame(self, bg=BG_DARK)
+        container.place(relx=0.5, rely=0.5, anchor="center")
+
+        tk.Label(container, text="Daftar Akun Baru", font=FONT_TITLE, bg=BG_DARK, fg=TEXT_PRIMARY).pack(pady=(0, 30))
+
+        tk.Label(container, text="Nama Lengkap", font=FONT_BOLD, bg=BG_DARK, fg=TEXT_MUTED).pack(anchor="w")
+        self.nama_var = tk.StringVar()
+        tk.Entry(container, textvariable=self.nama_var, font=FONT_BODY,
+                 bg=INPUT_BG, fg=TEXT_PRIMARY, insertbackground=ACCENT_GREEN, relief="flat", bd=0).pack(fill="x", pady=(4, 15), ipady=8)
+
+        tk.Label(container, text="Username", font=FONT_BOLD, bg=BG_DARK, fg=TEXT_MUTED).pack(anchor="w")
+        self.username_var = tk.StringVar()
+        tk.Entry(container, textvariable=self.username_var, font=FONT_BODY,
+                 bg=INPUT_BG, fg=TEXT_PRIMARY, insertbackground=ACCENT_GREEN, relief="flat", bd=0).pack(fill="x", pady=(4, 15), ipady=8)
+
+        tk.Label(container, text="Password", font=FONT_BOLD, bg=BG_DARK, fg=TEXT_MUTED).pack(anchor="w")
+        self.password_var = tk.StringVar()
+        entry_pwd = tk.Entry(container, textvariable=self.password_var, show="*", font=FONT_BODY,
+                 bg=INPUT_BG, fg=TEXT_PRIMARY, insertbackground=ACCENT_GREEN, relief="flat", bd=0, highlightthickness=1, highlightbackground=BORDER_COLOR, highlightcolor=ACCENT_GREEN)
+        entry_pwd.pack(fill="x", pady=(4, 5), ipady=8)
+
+        self.show_pwd_var = tk.BooleanVar(value=False)
+        def toggle_pwd_reg():
+            entry_pwd.config(show="" if self.show_pwd_var.get() else "*")
+            
+        tk.Checkbutton(container, text="Show Password", variable=self.show_pwd_var, command=toggle_pwd_reg,
+                       bg=BG_DARK, fg=TEXT_MUTED, activebackground=BG_DARK, activeforeground=TEXT_MUTED,
+                       selectcolor=BG_DARK, font=FONT_SMALL, relief="flat", bd=0).pack(anchor="w", pady=(0, 15))
+
+        styled_button(container, text="Daftar", command=self.do_register, bg=SUCCESS_COLOR, fg=BG_DARK, width=20).pack(fill="x", pady=(0, 15))
+
+        btn_log = tk.Label(container, text="Sudah punya akun? Login di sini", font=FONT_BODY, bg=BG_DARK, fg=ACCENT_CYAN, cursor="hand2")
+        btn_log.pack()
+        btn_log.bind("<Button-1>", lambda e: self.controller.show_frame("LoginFrame"))
+
+    def do_register(self):
+        nama = self.nama_var.get().strip()
+        usr = self.username_var.get().strip()
+        pwd = self.password_var.get().strip()
+        
+        if not nama or not usr or not pwd:
+            messagebox.showwarning("Peringatan", "Semua kolom harus diisi!")
+            return
+            
+        success = self.db.register_user(usr, pwd, nama)
+        if success:
+            messagebox.showinfo("Berhasil", "Akun berhasil didaftarkan. Silakan login.")
+            self.controller.show_frame("LoginFrame")
+        else:
+            messagebox.showerror("Gagal", "Username sudah digunakan!")
+
+
+# ============================================================
 # FRAME 1: DASHBOARD (Katalog Restoran)
 # ============================================================
 class DashboardFrame(tk.Frame):
@@ -103,7 +219,12 @@ class DashboardFrame(tk.Frame):
                  text=f"Selamat datang, {self.controller.pelanggan.nama}!",
                  font=FONT_BODY, bg=BG_CARD2, fg=TEXT_MUTED).pack(side="right")
 
-        # Tombol Riwayat di header
+        # Tombol Logout dan Riwayat di header
+        styled_button(inner_header, "Logout",
+                      command=lambda: self.controller.do_logout(),
+                      bg=DANGER_COLOR, fg=TEXT_WHITE,
+                      padx=14, pady=6).pack(side="right", padx=(0, 16))
+
         styled_button(inner_header, "Riwayat Pesanan",
                       command=lambda: self.controller.show_riwayat(),
                       bg=ACCENT_PURPLE, fg=TEXT_WHITE,
@@ -113,14 +234,14 @@ class DashboardFrame(tk.Frame):
         hero = tk.Frame(self, bg=BG_DARK, pady=24, padx=40)
         hero.pack(fill="x")
         tk.Label(hero, text="Pilih Restoran Favoritmu",
-                 font=FONT_GIANT, bg=BG_DARK, fg=TEXT_WHITE).pack(anchor="w")
+                 font=FONT_GIANT, bg=BG_DARK, fg=TEXT_PRIMARY).pack(anchor="w")
         tk.Label(hero, text="Temukan makanan lezat dari mitra restoran terpercaya kami",
                  font=FONT_BODY, bg=BG_DARK, fg=TEXT_MUTED).pack(anchor="w", pady=(4, 0))
 
         # SEARCH BAR
         sf = tk.Frame(self, bg=BG_DARK, padx=40)
         sf.pack(fill="x")
-        sc = tk.Frame(sf, bg=INPUT_BG, padx=14, pady=10)
+        sc = tk.Frame(sf, bg=INPUT_BG, padx=14, pady=10, highlightthickness=1, highlightbackground=BORDER_COLOR, highlightcolor=ACCENT_GREEN)
         sc.pack(fill="x")
         tk.Label(sc, text="[ Cari ]", font=FONT_SMALL, bg=INPUT_BG, fg=TEXT_MUTED).pack(side="left")
 
@@ -155,9 +276,9 @@ class DashboardFrame(tk.Frame):
         bottom_bar.pack(fill="x", side="bottom")
 
         self.btn_pilih = styled_button(
-            bottom_bar, text="Lihat Menu Restoran ->",
+            bottom_bar, text="Lihat Menu Restoran",
             command=self.pilih_restoran,
-            bg=ACCENT_GREEN, fg=BG_DARK, padx=30, pady=12
+            bg=ACCENT_GREEN, fg=TEXT_WHITE, padx=30, pady=12
         )
         self.btn_pilih.pack(side="right")
         self.btn_pilih.config(state="disabled")
@@ -239,10 +360,10 @@ class DashboardFrame(tk.Frame):
         row1 = tk.Frame(inner, bg=BG_CARD)
         row1.pack(fill="x")
         tk.Label(row1, text=icon_text, font=FONT_SMALL, bg=BG_CARD, fg=ACCENT_GREEN).pack(side="left")
-        arrow = tk.Label(row1, text=">", font=FONT_BOLD, bg=BG_CARD, fg=TEXT_MUTED)
+        arrow = tk.Label(row1, text="", font=FONT_BOLD, bg=BG_CARD, fg=TEXT_MUTED)
         arrow.pack(side="right")
 
-        tk.Label(inner, text=resto['nama'], font=FONT_HEADER, bg=BG_CARD, fg=TEXT_WHITE, anchor="w").pack(fill="x")
+        tk.Label(inner, text=resto['nama'], font=FONT_HEADER, bg=BG_CARD, fg=TEXT_PRIMARY, anchor="w").pack(fill="x")
         desc = resto.get('deskripsi', '') or "Klik untuk melihat menu"
         tk.Label(inner, text=desc, font=FONT_SMALL, bg=BG_CARD, fg=TEXT_MUTED, anchor="w").pack(fill="x")
 
@@ -276,7 +397,7 @@ class DashboardFrame(tk.Frame):
             widgets['indicator'].config(bg=ACCENT_GREEN if is_sel else BORDER_COLOR)
             widgets['arrow'].config(fg=ACCENT_GREEN if is_sel else TEXT_MUTED)
         nama = next((r['nama'] for r in self.restoran_list if r['id'] == rid), "")
-        self.selected_label.config(text=f"v  {nama} dipilih", fg=ACCENT_GREEN)
+        self.selected_label.config(text=f"{nama} dipilih", fg=ACCENT_GREEN)
         self.btn_pilih.config(state="normal")
 
     def pilih_restoran(self):
@@ -318,20 +439,21 @@ class MenuFrame(tk.Frame):
         tk.Frame(header, bg=ACCENT_GREEN, height=4).pack(fill="x")
         inner = tk.Frame(header, bg=BG_CARD2, padx=30, pady=14)
         inner.pack(fill="x")
-        tk.Button(inner, text="<- Kembali", font=FONT_BODY,
+        tk.Button(inner, text="< Kembali", font=FONT_BODY,
                   bg=BG_CARD2, fg=TEXT_MUTED, relief="flat", cursor="hand2", bd=0,
                   command=lambda: self.controller.show_frame("DashboardFrame"),
                   activebackground=BG_CARD2, activeforeground=ACCENT_GREEN).pack(side="left")
         tk.Label(inner, text=f"  {self.restoran_nama}",
-                 font=FONT_TITLE, bg=BG_CARD2, fg=TEXT_WHITE).pack(side="left", padx=16)
-        self.badge_label = tk.Label(inner, text="Keranjang: 0 item",
-                                    font=FONT_BODY, bg=BG_CARD2, fg=TEXT_MUTED)
+                 font=FONT_TITLE, bg=BG_CARD2, fg=TEXT_PRIMARY).pack(side="left", padx=16)
+        total_in_cart = self.controller.keranjang.total_qty()
+        self.badge_label = tk.Label(inner, text=f"Keranjang: {total_in_cart} item",
+                                    font=FONT_BODY, bg=BG_CARD2, fg=TEXT_MUTED if total_in_cart == 0 else ACCENT_GREEN)
         self.badge_label.pack(side="right")
 
         # BOTTOM BAR — pack sebelum scrollable content
         bottom = tk.Frame(self, bg=BG_CARD2, padx=30, pady=14)
         bottom.pack(fill="x", side="bottom")
-        styled_button(bottom, "Lihat Keranjang ->",
+        styled_button(bottom, "Lihat Keranjang",
                       command=self.ke_keranjang,
                       bg=ACCENT_PURPLE, fg=TEXT_WHITE, padx=30, pady=12).pack(side="right")
 
@@ -388,7 +510,7 @@ class MenuFrame(tk.Frame):
 
         # Polimorfisme: tampilkan_info() output berbeda untuk Makanan vs Minuman
         lbl_info = tk.Label(info, text=item.tampilkan_info(), font=FONT_BOLD,
-                            bg=BG_CARD, fg=TEXT_WHITE, anchor="w")
+                            bg=BG_CARD, fg=TEXT_PRIMARY, anchor="w")
         lbl_info.pack(fill="x")
         lbl_info.bind("<MouseWheel>", scroll_cb)
 
@@ -400,7 +522,13 @@ class MenuFrame(tk.Frame):
         qty_frame = tk.Frame(row, bg=BG_CARD)
         qty_frame.pack(side="right")
 
-        qty_var = tk.IntVar(value=0)
+        current_qty = 0
+        for cart_item in self.controller.keranjang.get_items():
+            if cart_item['menu_id'] == item.id:
+                current_qty = cart_item['qty']
+                break
+
+        qty_var = tk.IntVar(value=current_qty)
         self.qty_vars[item.id] = qty_var
 
         def validate_qty(val):
@@ -413,35 +541,45 @@ class MenuFrame(tk.Frame):
 
         vcmd = (self.register(validate_qty), '%P')
 
+        def on_qty_change(v, delta):
+            new_val = v.get() + delta
+            if new_val < 0: new_val = 0
+            if new_val > 99: new_val = 99
+            v.set(new_val)
+            self.update_cart_qty(item, new_val)
+
         tk.Button(qty_frame, text="-", font=FONT_BOLD, bg=INPUT_BG, fg=TEXT_PRIMARY,
                   relief="flat", cursor="hand2", width=3, pady=4,
-                  command=lambda v=qty_var: v.set(max(0, v.get() - 1)),
+                  command=lambda v=qty_var: on_qty_change(v, -1),
                   activebackground=DANGER_COLOR, activeforeground=TEXT_WHITE).pack(side="left")
 
         qty_entry = tk.Entry(qty_frame, textvariable=qty_var, width=4, font=FONT_BOLD,
-                             justify="center", bg=INPUT_BG, fg=TEXT_WHITE, relief="flat", bd=0,
+                             justify="center", bg=INPUT_BG, fg=TEXT_PRIMARY, relief="flat", bd=0,
                              validate="key", validatecommand=vcmd)
         qty_entry.pack(side="left", padx=4)
 
+        def on_entry_change(event=None):
+            try:
+                new_val = int(qty_var.get())
+            except ValueError:
+                new_val = 0
+            self.update_cart_qty(item, new_val)
+
+        qty_entry.bind("<FocusOut>", on_entry_change)
+        qty_entry.bind("<Return>", on_entry_change)
+
         tk.Button(qty_frame, text="+", font=FONT_BOLD, bg=INPUT_BG, fg=TEXT_PRIMARY,
                   relief="flat", cursor="hand2", width=3, pady=4,
-                  command=lambda v=qty_var: v.set(min(99, v.get() + 1)),
+                  command=lambda v=qty_var: on_qty_change(v, 1),
                   activebackground=SUCCESS_COLOR, activeforeground=BG_DARK).pack(side="left")
 
-        styled_button(qty_frame, "Tambah",
-                      command=lambda i=item, v=qty_var: self.tambah_ke_keranjang(i, v),
-                      bg=ACCENT_GREEN, fg=BG_DARK, padx=14, pady=5).pack(side="left", padx=(10, 0))
-
-    def tambah_ke_keranjang(self, item, qty_var):
-        qty = qty_var.get()
-        if qty <= 0:
-            messagebox.showwarning("Jumlah Invalid", "Masukkan jumlah minimal 1!")
-            return
-        self.controller.keranjang.tambah_item(item.id, item.nama, item.harga, qty, item.tipe)
-        qty_var.set(0)
+    def update_cart_qty(self, item, qty_baru):
+        success = self.controller.keranjang.edit_qty(item.id, qty_baru)
+        if not success and qty_baru > 0:
+            self.controller.keranjang.tambah_item(item.id, item.nama, item.harga, qty_baru, item.tipe)
+        
         total = self.controller.keranjang.total_qty()
-        self.badge_label.config(text=f"Keranjang: {total} item", fg=ACCENT_GREEN)
-        messagebox.showinfo("Ditambahkan", f"{item.nama} x{qty} ditambahkan ke keranjang!")
+        self.badge_label.config(text=f"Keranjang: {total} item", fg=TEXT_MUTED if total == 0 else ACCENT_GREEN)
 
     def ke_keranjang(self):
         if self.controller.keranjang.is_kosong():
@@ -473,23 +611,12 @@ class KeranjangFrame(tk.Frame):
         tk.Frame(header, bg=ACCENT_PURPLE, height=4).pack(fill="x")
         inner = tk.Frame(header, bg=BG_CARD2, padx=30, pady=14)
         inner.pack(fill="x")
-        tk.Button(inner, text="<- Kembali ke Menu", font=FONT_BODY,
+        tk.Button(inner, text="< Kembali ke Menu", font=FONT_BODY,
                   bg=BG_CARD2, fg=TEXT_MUTED, relief="flat", cursor="hand2", bd=0,
                   command=lambda: self.controller.show_frame("MenuFrame"),
                   activebackground=BG_CARD2, activeforeground=ACCENT_GREEN).pack(side="left")
         tk.Label(inner, text="  Keranjang Belanja", font=FONT_TITLE,
-                 bg=BG_CARD2, fg=TEXT_WHITE).pack(side="left", padx=16)
-
-        # NAMA PEMESAN
-        form = tk.Frame(self, bg=BG_DARK, padx=40, pady=18)
-        form.pack(fill="x")
-        tk.Label(form, text="Nama Pemesan", font=FONT_BOLD, bg=BG_DARK, fg=TEXT_MUTED).pack(anchor="w")
-        self.nama_var = tk.StringVar(value=self.controller.pelanggan.nama)
-        e = tk.Entry(form, textvariable=self.nama_var, font=FONT_BODY,
-                     bg=INPUT_BG, fg=TEXT_WHITE, insertbackground=ACCENT_GREEN,
-                     relief="flat", bd=0)
-        e.pack(fill="x", pady=(4, 0), ipady=10)
-        tk.Frame(form, bg=ACCENT_PURPLE, height=2).pack(fill="x")
+                 bg=BG_CARD2, fg=TEXT_PRIMARY).pack(side="left", padx=16)
 
         # BOTTOM BAR — pack sebelum table!
         bottom = tk.Frame(self, bg=BG_CARD2, padx=40, pady=14)
@@ -511,7 +638,7 @@ class KeranjangFrame(tk.Frame):
 
         # TABEL
         tk.Label(self, text="Rincian Pesanan", font=FONT_HEADER,
-                 bg=BG_DARK, fg=TEXT_WHITE).pack(anchor="w", padx=40, pady=(16, 6))
+                 bg=BG_DARK, fg=TEXT_PRIMARY).pack(anchor="w", padx=40, pady=(16, 6))
 
         table_frame = tk.Frame(self, bg=BG_DARK, padx=40)
         table_frame.pack(fill="both", expand=True)
@@ -556,11 +683,11 @@ class KeranjangFrame(tk.Frame):
         row.bind("<MouseWheel>", scroll_cb)
 
         tk.Label(row, text=item['nama'], font=FONT_BODY, bg=BG_CARD,
-                 fg=TEXT_WHITE, width=36, anchor="w").pack(side="left")
+                 fg=TEXT_PRIMARY, width=36, anchor="w").pack(side="left")
 
         qty_var = tk.IntVar(value=item['qty'])
         qty_entry = tk.Entry(row, textvariable=qty_var, width=5, font=FONT_BODY,
-                             justify="center", bg=INPUT_BG, fg=TEXT_WHITE, relief="flat", bd=0)
+                             justify="center", bg=INPUT_BG, fg=TEXT_PRIMARY, relief="flat", bd=0)
         qty_entry.pack(side="left")
 
         subtotal_var = tk.StringVar(value=f"Rp{item['subtotal']:,.0f}")
@@ -598,10 +725,7 @@ class KeranjangFrame(tk.Frame):
         if self.controller.keranjang.is_kosong():
             messagebox.showwarning("Kosong", "Keranjang masih kosong!")
             return
-        nama = self.nama_var.get().strip()
-        if not nama:
-            messagebox.showwarning("Nama Kosong", "Masukkan nama pemesan!")
-            return
+        nama = self.controller.pelanggan.nama
 
         items = self.controller.keranjang.get_items()
         pesanan_id = self.db.buat_pesanan(
@@ -665,13 +789,13 @@ class RiwayatFrame(tk.Frame):
         inner = tk.Frame(header, bg=BG_CARD2, padx=30, pady=14)
         inner.pack(fill="x")
 
-        tk.Button(inner, text="<- Pesan Lagi", font=FONT_BODY,
+        tk.Button(inner, text="< Pesan Lagi", font=FONT_BODY,
                   bg=BG_CARD2, fg=TEXT_MUTED, relief="flat", cursor="hand2", bd=0,
                   command=self._pesan_lagi,
                   activebackground=BG_CARD2, activeforeground=ACCENT_GREEN).pack(side="left")
 
         tk.Label(inner, text="  Riwayat Pesanan", font=FONT_TITLE,
-                 bg=BG_CARD2, fg=TEXT_WHITE).pack(side="left", padx=16)
+                 bg=BG_CARD2, fg=TEXT_PRIMARY).pack(side="left", padx=16)
 
         self.poll_label = tk.Label(inner, text="Memuat...", font=FONT_SMALL,
                                    bg=BG_CARD2, fg=TEXT_MUTED)
@@ -682,7 +806,7 @@ class RiwayatFrame(tk.Frame):
         info_bar = tk.Frame(self, bg=BG_CARD, padx=30, pady=10)
         info_bar.pack(fill="x")
         tk.Label(info_bar, text=f"Pesanan atas nama: {nama}",
-                 font=FONT_BOLD, bg=BG_CARD, fg=TEXT_WHITE).pack(side="left")
+                 font=FONT_BOLD, bg=BG_CARD, fg=TEXT_PRIMARY).pack(side="left")
 
         # SCROLLABLE LIST
         container = tk.Frame(self, bg=BG_DARK, padx=30, pady=16)
@@ -783,7 +907,7 @@ class RiwayatFrame(tk.Frame):
         row1 = tk.Frame(inner_top, bg=BG_CARD)
         row1.pack(fill="x")
         tk.Label(row1, text=f"Pesanan #{pesanan['id']}  |  {pesanan.get('restoran_nama', '')}",
-                 font=FONT_BOLD, bg=BG_CARD, fg=TEXT_WHITE).pack(side="left")
+                 font=FONT_BOLD, bg=BG_CARD, fg=TEXT_PRIMARY).pack(side="left")
 
         badge = tk.Label(row1, text=self.STATUS_LABELS.get(status, status),
                          font=FONT_SMALL, bg=color, fg=BG_DARK, padx=8, pady=3)

@@ -15,20 +15,20 @@ from datetime import datetime
 # ============================================================
 # KONSTANTA WARNA & STYLE (Dark Theme — Restaurant App)
 # ============================================================
-BG_DARK       = "#0d0d18"
-BG_CARD       = "#1a1a2e"
-BG_CARD2      = "#151525"
-BG_SIDEBAR    = "#111122"
-ACCENT_ORANGE = "#f97316"
-ACCENT_BLUE   = "#3b82f6"
-ACCENT_GREEN  = "#22c55e"
-ACCENT_YELLOW = "#eab308"
-ACCENT_RED    = "#ef4444"
-TEXT_PRIMARY  = "#f0f0f0"
-TEXT_MUTED    = "#8892a4"
+BG_DARK       = "#f4f1ea"
+BG_CARD       = "#faf9f6"
+BG_CARD2      = "#ebe7dd"
+BG_SIDEBAR    = "#e6e2d8"
+ACCENT_ORANGE = "#e09f3e"
+ACCENT_BLUE   = "#73a5c6"
+ACCENT_GREEN  = "#6b9080"
+ACCENT_YELLOW = "#e09f3e"
+ACCENT_RED    = "#e56b6f"
+TEXT_PRIMARY  = "#3a4042"
+TEXT_MUTED    = "#808a8d"
 TEXT_WHITE    = "#ffffff"
-BORDER_COLOR  = "#2a2a3e"
-INPUT_BG      = "#252540"
+BORDER_COLOR  = "#d1cec7"
+INPUT_BG      = "#ffffff"
 
 FONT_TITLE  = ("Segoe UI", 18, "bold")
 FONT_HEADER = ("Segoe UI", 13, "bold")
@@ -105,7 +105,7 @@ class RestaurantDashboard(tk.Frame):
         text_info.pack(side="left", padx=(0, 16))
 
         tk.Label(text_info, text=self.restoran.get('nama', 'Restoran'),
-                 font=FONT_BOLD, bg=BG_CARD2, fg=TEXT_WHITE).pack(anchor="e")
+                 font=FONT_BOLD, bg=BG_CARD2, fg=TEXT_PRIMARY).pack(anchor="e")
         tk.Label(text_info, text=f"Kasir: {self.kasir.nama}",
                  font=FONT_SMALL, bg=BG_CARD2, fg=TEXT_MUTED).pack(anchor="e")
 
@@ -254,7 +254,7 @@ class PesananFrame(tk.Frame):
         status = pesanan['status']
         status_color = STATUS_COLORS.get(status, TEXT_MUTED)
 
-        tk.Label(detail_header, text=f"Pesanan #{pesanan['id']}", font=FONT_TITLE, bg=BG_CARD2, fg=TEXT_WHITE).pack(anchor="w")
+        tk.Label(detail_header, text=f"Pesanan #{pesanan['id']}", font=FONT_TITLE, bg=BG_CARD2, fg=TEXT_PRIMARY).pack(anchor="w")
         tk.Label(detail_header, text=f"a/n {pesanan['nama_pemesan']}", font=FONT_BODY, bg=BG_CARD2, fg=TEXT_MUTED).pack(anchor="w")
         tk.Label(detail_header, text=f"Waktu: {pesanan.get('waktu', '-')}", font=FONT_SMALL, bg=BG_CARD2, fg=TEXT_MUTED).pack(anchor="w")
 
@@ -262,7 +262,7 @@ class PesananFrame(tk.Frame):
         status_badge.pack(anchor="w", pady=(8, 0))
         tk.Label(status_badge, text=status, font=FONT_BOLD, bg=status_color, fg=BG_DARK).pack()
 
-        tk.Label(self.right_panel, text="Rincian Pesanan:", font=FONT_HEADER, bg=BG_DARK, fg=TEXT_WHITE).pack(anchor="w", padx=30, pady=(20, 8))
+        tk.Label(self.right_panel, text="Rincian Pesanan:", font=FONT_HEADER, bg=BG_DARK, fg=TEXT_PRIMARY).pack(anchor="w", padx=30, pady=(20, 8))
 
         table_frame = tk.Frame(self.right_panel, bg=BG_DARK, padx=30)
         table_frame.pack(fill="x")
@@ -275,7 +275,7 @@ class PesananFrame(tk.Frame):
         for item in pesanan.get('items', []):
             row = tk.Frame(table_frame, bg=BG_CARD, padx=16, pady=10)
             row.pack(fill="x", pady=(1, 0))
-            tk.Label(row, text=item['nama_menu'], font=FONT_BODY, bg=BG_CARD, fg=TEXT_WHITE, width=30, anchor="w").pack(side="left")
+            tk.Label(row, text=item['nama_menu'], font=FONT_BODY, bg=BG_CARD, fg=TEXT_PRIMARY, width=30, anchor="w").pack(side="left")
             tk.Label(row, text=f"x{item['qty']}", font=FONT_BODY, bg=BG_CARD, fg=TEXT_MUTED, width=8, anchor="w").pack(side="left")
             tk.Label(row, text=f"Rp{item['subtotal']:,.0f}", font=FONT_BOLD, bg=BG_CARD, fg=ACCENT_GREEN, width=15, anchor="w").pack(side="left")
             total += item['subtotal']
@@ -292,7 +292,7 @@ class PesananFrame(tk.Frame):
         mgmt_frame = tk.Frame(self.right_panel, bg=BG_CARD, padx=30, pady=20)
         mgmt_frame.pack(fill="x", padx=0, pady=(24, 0))
 
-        tk.Label(mgmt_frame, text="Manajemen Status Pesanan", font=FONT_HEADER, bg=BG_CARD, fg=TEXT_WHITE).pack(anchor="w")
+        tk.Label(mgmt_frame, text="Manajemen Status Pesanan", font=FONT_HEADER, bg=BG_CARD, fg=TEXT_PRIMARY).pack(anchor="w")
         tk.Label(mgmt_frame, text="Status diperbarui secara berurutan (tidak bisa lompat)", font=FONT_SMALL, bg=BG_CARD, fg=TEXT_MUTED).pack(anchor="w", pady=(2, 16))
 
         STATUS_FLOW = Pesanan.STATUS_FLOW
@@ -379,7 +379,7 @@ class PesananFrame(tk.Frame):
 
         row1 = tk.Frame(inner, bg=BG_CARD)
         row1.pack(fill="x")
-        tk.Label(row1, text=f"Pesanan #{pesanan['id']}", font=FONT_BOLD, bg=BG_CARD, fg=TEXT_WHITE).pack(side="left")
+        tk.Label(row1, text=f"Pesanan #{pesanan['id']}", font=FONT_BOLD, bg=BG_CARD, fg=TEXT_PRIMARY).pack(side="left")
         tk.Label(row1, text=status, font=FONT_SMALL, bg=status_color, fg=BG_DARK, padx=6, pady=2).pack(side="right")
 
         tk.Label(inner, text=f"Pemesan: {pesanan['nama_pemesan']}", font=FONT_BODY, bg=BG_CARD, fg=TEXT_PRIMARY).pack(anchor="w", pady=(4, 0))
@@ -399,7 +399,7 @@ class PesananFrame(tk.Frame):
             child.bind("<Button-1>", lambda e, p=pesanan, c=card, ind=indicator: self.select_pesanan(p, c, ind))
             child.bind("<MouseWheel>", scroll_cb)
 
-        card.bind("<Enter>", lambda e, c=card: c.config(bg="#222235"))
+        card.bind("<Enter>", lambda e, c=card: c.config(bg="#ebe7dd"))
         card.bind("<Leave>", lambda e, c=card: c.config(bg=BG_CARD))
 
     def select_pesanan(self, pesanan: dict, card=None, indicator=None):
@@ -465,7 +465,7 @@ class LaporanFrame(tk.Frame):
         # Header
         header = tk.Frame(self, bg=BG_CARD, padx=40, pady=24)
         header.pack(fill="x")
-        tk.Label(header, text="Laporan & Statistik", font=FONT_TITLE, bg=BG_CARD, fg=TEXT_WHITE).pack(anchor="w")
+        tk.Label(header, text="Laporan & Statistik", font=FONT_TITLE, bg=BG_CARD, fg=TEXT_PRIMARY).pack(anchor="w")
         tk.Label(header, text="Statistik performa penjualan restoran", font=FONT_BODY, bg=BG_CARD, fg=TEXT_MUTED).pack(anchor="w", pady=(4,0))
 
         # Content Layout
@@ -483,7 +483,7 @@ class LaporanFrame(tk.Frame):
         tk.Label(card_pendapatan, text="*Dihitung dari seluruh pesanan yang telah 'Selesai'", font=FONT_SMALL, bg=BG_CARD2, fg=TEXT_MUTED).pack(anchor="w", pady=(4, 0))
 
         # Tabel Menu Terlaris
-        tk.Label(content, text="Menu Paling Sering Diorder (Top Menu)", font=FONT_HEADER, bg=BG_DARK, fg=TEXT_WHITE).pack(anchor="w", pady=(0, 10))
+        tk.Label(content, text="Menu Paling Sering Diorder (Top Menu)", font=FONT_HEADER, bg=BG_DARK, fg=TEXT_PRIMARY).pack(anchor="w", pady=(0, 10))
 
         table_frame = tk.Frame(content, bg=BG_CARD)
         table_frame.pack(fill="both", expand=True)
@@ -508,7 +508,7 @@ class LaporanFrame(tk.Frame):
 
                 color_rank = ACCENT_ORANGE if i < 3 else TEXT_MUTED
                 tk.Label(row, text=f"#{i+1}", font=FONT_BOLD, bg=BG_CARD, fg=color_rank, width=10, anchor="w").pack(side="left")
-                tk.Label(row, text=menu['nama'], font=FONT_BODY, bg=BG_CARD, fg=TEXT_WHITE, width=30, anchor="w").pack(side="left")
+                tk.Label(row, text=menu['nama'], font=FONT_BODY, bg=BG_CARD, fg=TEXT_PRIMARY, width=30, anchor="w").pack(side="left")
                 tk.Label(row, text=f"{menu['total_terjual']} porsi", font=FONT_BODY, bg=BG_CARD, fg=TEXT_PRIMARY, width=15, anchor="w").pack(side="left")
                 tk.Label(row, text=f"Rp{menu['total_pendapatan']:,.0f}", font=FONT_BOLD, bg=BG_CARD, fg=ACCENT_GREEN, width=20, anchor="w").pack(side="left")
 
@@ -552,7 +552,7 @@ class ManajemenMenuFrame(tk.Frame):
     def _build_list_panel(self, parent):
         header = tk.Frame(parent, bg=BG_DARK, padx=30, pady=24)
         header.pack(fill="x")
-        tk.Label(header, text="Daftar Menu Restoran", font=FONT_TITLE, bg=BG_DARK, fg=TEXT_WHITE).pack(side="left")
+        tk.Label(header, text="Daftar Menu Restoran", font=FONT_TITLE, bg=BG_DARK, fg=TEXT_PRIMARY).pack(side="left")
         styled_button(header, "+ Menu Baru", command=self._form_tambah, bg=ACCENT_GREEN, fg=BG_DARK, padx=16, pady=6).pack(side="right")
 
         table_frame = tk.Frame(parent, bg=BG_DARK, padx=30)
@@ -587,7 +587,7 @@ class ManajemenMenuFrame(tk.Frame):
             row.pack(fill="x", pady=(0, 4))
             row.bind("<MouseWheel>", scroll_cb)
 
-            tk.Label(row, text=menu['nama'], font=FONT_BODY, bg=BG_CARD, fg=TEXT_WHITE, width=25, anchor="w").pack(side="left")
+            tk.Label(row, text=menu['nama'], font=FONT_BODY, bg=BG_CARD, fg=TEXT_PRIMARY, width=25, anchor="w").pack(side="left")
             kategori = "Makanan" if menu['tipe'] == 'makanan' else "Minuman"
             tk.Label(row, text=kategori, font=FONT_SMALL, bg=BG_CARD, fg=TEXT_MUTED, width=15, anchor="w").pack(side="left")
             tk.Label(row, text=f"Rp{menu['harga']:,.0f}", font=FONT_BOLD, bg=BG_CARD, fg=ACCENT_GREEN, width=15, anchor="w").pack(side="left")
@@ -607,7 +607,7 @@ class ManajemenMenuFrame(tk.Frame):
         f = tk.Frame(self.right_panel, bg=BG_CARD2, padx=30, pady=30)
         f.pack(fill="both", expand=True)
 
-        tk.Label(f, text=mode, font=FONT_HEADER, bg=BG_CARD2, fg=TEXT_WHITE).pack(anchor="w", pady=(0, 20))
+        tk.Label(f, text=mode, font=FONT_HEADER, bg=BG_CARD2, fg=TEXT_PRIMARY).pack(anchor="w", pady=(0, 20))
 
         # Fields
         self.var_id = tk.IntVar(value=menu_data['id'] if menu_data else 0)
@@ -619,10 +619,10 @@ class ManajemenMenuFrame(tk.Frame):
             tk.Label(f, text=label_text, font=FONT_BOLD, bg=BG_CARD2, fg=TEXT_MUTED).pack(anchor="w", pady=(10, 4))
             widget.pack(fill="x", ipady=6)
 
-        entry_nama = tk.Entry(f, textvariable=self.var_nama, font=FONT_BODY, bg=INPUT_BG, fg=TEXT_WHITE, relief="flat", bd=0, insertbackground=ACCENT_ORANGE)
+        entry_nama = tk.Entry(f, textvariable=self.var_nama, font=FONT_BODY, bg=INPUT_BG, fg=TEXT_PRIMARY, relief="flat", bd=0, highlightthickness=1, highlightbackground=BORDER_COLOR, highlightcolor=ACCENT_ORANGE, insertbackground=ACCENT_ORANGE)
         make_field("Nama Menu", entry_nama)
 
-        entry_harga = tk.Entry(f, textvariable=self.var_harga, font=FONT_BODY, bg=INPUT_BG, fg=TEXT_WHITE, relief="flat", bd=0, insertbackground=ACCENT_ORANGE)
+        entry_harga = tk.Entry(f, textvariable=self.var_harga, font=FONT_BODY, bg=INPUT_BG, fg=TEXT_PRIMARY, relief="flat", bd=0, highlightthickness=1, highlightbackground=BORDER_COLOR, highlightcolor=ACCENT_ORANGE, insertbackground=ACCENT_ORANGE)
         make_field("Harga (Rp)", entry_harga)
 
         tk.Label(f, text="Tipe", font=FONT_BOLD, bg=BG_CARD2, fg=TEXT_MUTED).pack(anchor="w", pady=(10, 4))

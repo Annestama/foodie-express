@@ -7,6 +7,7 @@ shared database yang digunakan oleh User App dan Restaurant App.
 
 import sqlite3
 import os
+import hashlib
 from datetime import datetime
 
 
@@ -36,6 +37,16 @@ class DatabaseManager:
         """Membuat semua tabel jika belum ada."""
         conn = self._get_connection()
         cursor = conn.cursor()
+
+        # Tabel users
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                id           INTEGER PRIMARY KEY AUTOINCREMENT,
+                username     TEXT UNIQUE NOT NULL,
+                password     TEXT NOT NULL,
+                nama_lengkap TEXT NOT NULL
+            )
+        """)
 
         # Tabel restoran
         cursor.execute("""
@@ -410,3 +421,49 @@ class DatabaseManager:
         row = cursor.fetchone()
         conn.close()
         return row['cnt'] == 0
+
+    # =========================================================================
+    # USER & AUTHENTICATION OPERATIONS
+    # =========================================================================
+
+    def _hash_password(self, password: str) -> str:
+        """Meng-hash password menggunakan SHA-256."""
+        return hashlib.sha256(password.encode('utf-8')).hexdigest()
+
+    def register_user(self, username: str, password: str, nama_lengkap: str) -> bool:
+        """
+        Mendaftarkan user baru.
+        Mengembalikan True jika berhasil, False jika username sudah ada.
+        """
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        hashed_pw = self._hash_password(password)
+        try:
+            cursor.execute(
+                "INSERT INTO users (username, password, nama_lengkap) VALUES (?, ?, ?)",
+                (username, hashed_pw, nama_lengkap)
+            )
+            conn.commit()
+            success = True
+        except sqlite3.IntegrityError:
+            # Username sudah ada (UNIQUE constraint failed)
+            success = False
+        finally:
+            conn.close()
+        return success
+
+    def authenticate_user(self, username: str, password: str) -> dict | None:
+        """
+        Memvalidasi login user.
+        Mengembalikan dict data user jika berhasil, atau None jika gagal.
+        """
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        hashed_pw = self._hash_password(password)
+        cursor.execute(
+            "SELECT * FROM users WHERE username = ? AND password = ?",
+            (username, hashed_pw)
+        )
+        row = cursor.fetchone()
+        conn.close()
+        return dict(row) if row else None
