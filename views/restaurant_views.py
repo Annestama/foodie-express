@@ -248,7 +248,32 @@ class PesananFrame(tk.Frame):
 
     def _build_right_panel_detail(self, pesanan: dict):
         for w in self.right_panel.winfo_children(): w.destroy()
-        detail_header = tk.Frame(self.right_panel, bg=BG_CARD2, padx=30, pady=20)
+        
+        canvas = tk.Canvas(self.right_panel, bg=BG_DARK, bd=0, highlightthickness=0)
+        scrollbar = ttk.Scrollbar(self.right_panel, orient="vertical", command=canvas.yview)
+        scrollable_frame = tk.Frame(canvas, bg=BG_DARK)
+        
+        scrollable_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+        canvas_win = canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+        
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+        
+        canvas.bind("<Configure>", lambda e: canvas.itemconfig(canvas_win, width=e.width))
+
+        def _on_mousewheel(event):
+            canvas.yview_scroll(-1*(event.delta//120), "units")
+            
+        def bind_scroll(widget):
+            widget.bind("<MouseWheel>", _on_mousewheel)
+            for child in widget.winfo_children():
+                bind_scroll(child)
+
+        canvas.bind("<MouseWheel>", _on_mousewheel)
+        scrollable_frame.bind("<MouseWheel>", _on_mousewheel)
+
+        detail_header = tk.Frame(scrollable_frame, bg=BG_CARD2, padx=30, pady=20)
         detail_header.pack(fill="x")
 
         status = pesanan['status']
@@ -256,15 +281,27 @@ class PesananFrame(tk.Frame):
 
         tk.Label(detail_header, text=f"Pesanan #{pesanan['id']}", font=FONT_TITLE, bg=BG_CARD2, fg=TEXT_PRIMARY).pack(anchor="w")
         tk.Label(detail_header, text=f"a/n {pesanan['nama_pemesan']}", font=FONT_BODY, bg=BG_CARD2, fg=TEXT_MUTED).pack(anchor="w")
-        tk.Label(detail_header, text=f"Waktu: {pesanan.get('waktu', '-')}", font=FONT_SMALL, bg=BG_CARD2, fg=TEXT_MUTED).pack(anchor="w")
+        tk.Label(detail_header, text=f"Dibuat: {pesanan.get('waktu', '-')}", font=FONT_SMALL, bg=BG_CARD2, fg=TEXT_MUTED).pack(anchor="w")
 
         status_badge = tk.Frame(detail_header, bg=status_color, padx=12, pady=4)
-        status_badge.pack(anchor="w", pady=(8, 0))
+        status_badge.pack(anchor="w", pady=(8, 4))
         tk.Label(status_badge, text=status, font=FONT_BOLD, bg=status_color, fg=BG_DARK).pack()
 
-        tk.Label(self.right_panel, text="Rincian Pesanan:", font=FONT_HEADER, bg=BG_DARK, fg=TEXT_PRIMARY).pack(anchor="w", padx=30, pady=(20, 8))
+        # Tambahkan info timestamp status
+        ts_frame = tk.Frame(detail_header, bg=BG_CARD2)
+        ts_frame.pack(anchor="w", pady=(4, 0))
+        if pesanan.get('waktu_dikonfirmasi'):
+            tk.Label(ts_frame, text=f"✓ Dikonfirmasi: {pesanan['waktu_dikonfirmasi']}", font=FONT_SMALL, bg=BG_CARD2, fg=ACCENT_BLUE).pack(anchor="w")
+        if pesanan.get('waktu_diproses'):
+            tk.Label(ts_frame, text=f"✓ Diproses: {pesanan['waktu_diproses']}", font=FONT_SMALL, bg=BG_CARD2, fg=ACCENT_ORANGE).pack(anchor="w")
+        if pesanan.get('waktu_dikirim'):
+            tk.Label(ts_frame, text=f"✓ Dikirim: {pesanan['waktu_dikirim']}", font=FONT_SMALL, bg=BG_CARD2, fg=ACCENT_GREEN).pack(anchor="w")
+        if pesanan.get('waktu_selesai'):
+            tk.Label(ts_frame, text=f"✓ Selesai: {pesanan['waktu_selesai']}", font=FONT_SMALL, bg=BG_CARD2, fg="#6b7280").pack(anchor="w")
 
-        table_frame = tk.Frame(self.right_panel, bg=BG_DARK, padx=30)
+        tk.Label(scrollable_frame, text="Rincian Pesanan:", font=FONT_HEADER, bg=BG_DARK, fg=TEXT_PRIMARY).pack(anchor="w", padx=30, pady=(20, 8))
+
+        table_frame = tk.Frame(scrollable_frame, bg=BG_DARK, padx=30)
         table_frame.pack(fill="x")
         header_row = tk.Frame(table_frame, bg=BG_CARD2, padx=16, pady=8)
         header_row.pack(fill="x")
@@ -285,11 +322,14 @@ class PesananFrame(tk.Frame):
         tk.Label(total_row, text="Grand Total:", font=FONT_HEADER, bg=BG_CARD2, fg=TEXT_MUTED).pack(side="left")
         tk.Label(total_row, text=f"Rp{total:,.0f}", font=FONT_LARGE, bg=BG_CARD2, fg=ACCENT_GREEN).pack(side="right")
 
-        self._build_status_panel(pesanan, status, status_color)
+        self._build_status_panel(scrollable_frame, pesanan, status, status_color)
+        
+        # Bind scroll for all dynamically created elements inside scrollable_frame
+        bind_scroll(scrollable_frame)
 
-    def _build_status_panel(self, pesanan: dict, status: str, status_color: str):
+    def _build_status_panel(self, parent, pesanan: dict, status: str, status_color: str):
         from models.pesanan import Pesanan
-        mgmt_frame = tk.Frame(self.right_panel, bg=BG_CARD, padx=30, pady=20)
+        mgmt_frame = tk.Frame(parent, bg=BG_CARD, padx=30, pady=20)
         mgmt_frame.pack(fill="x", padx=0, pady=(24, 0))
 
         tk.Label(mgmt_frame, text="Manajemen Status Pesanan", font=FONT_HEADER, bg=BG_CARD, fg=TEXT_PRIMARY).pack(anchor="w")
@@ -661,8 +701,6 @@ class ManajemenMenuFrame(tk.Frame):
         nama = self.var_nama.get().strip()
         harga_str = self.var_harga.get().strip()
         tipe = self.var_tipe.get()
-        pedas = "Tidak Pedas"
-        dingin = 1
         menu_id = self.var_id.get()
 
         if not nama or not harga_str:
@@ -677,11 +715,11 @@ class ManajemenMenuFrame(tk.Frame):
 
         if menu_id > 0:
             # Update
-            self.db.update_menu(menu_id, nama, harga, tipe, pedas, dingin)
+            self.db.update_menu(menu_id, nama, harga, tipe)
             messagebox.showinfo("Sukses", f"Menu '{nama}' berhasil diperbarui!")
         else:
             # Tambah
-            self.db.tambah_menu(self.restoran['id'], nama, harga, tipe, pedas, dingin)
+            self.db.tambah_menu(self.restoran['id'], nama, harga, tipe)
             messagebox.showinfo("Sukses", f"Menu '{nama}' berhasil ditambahkan!")
 
         # Refresh

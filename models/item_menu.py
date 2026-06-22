@@ -48,17 +48,12 @@ class Makanan(ItemMenu):
     Child Class (Kelas Turunan) dari ItemMenu — merepresentasikan item makanan.
 
     Pilar Pewarisan: Mewarisi id, nama, harga, restoran_id dari ItemMenu.
-    Pilar Polimorfisme: Meng-override method tampilkan_info() dengan format
-    yang menyertakan informasi level kepedasan.
-
-    Tambahan atribut:
-        level_pedas (str): Level kepedasan makanan (Tidak Pedas / Pedas / Sangat Pedas)
+    Pilar Polimorfisme: Meng-override method tampilkan_info().
     """
 
-    def __init__(self, id: int, nama: str, harga: float, restoran_id: int, level_pedas: str = "Tidak Pedas"):
+    def __init__(self, id: int, nama: str, harga: float, restoran_id: int):
         # Memanggil __init__ dari parent class (ItemMenu)
         super().__init__(id, nama, harga, restoran_id, tipe="makanan")
-        self.level_pedas = level_pedas  # Atribut tambahan khusus subclass Makanan
 
     def tampilkan_info(self) -> str:
         """
@@ -68,7 +63,7 @@ class Makanan(ItemMenu):
         return f"[Makanan] {self.nama}"
 
     def __repr__(self):
-        return f"Makanan(id={self.id}, nama='{self.nama}', harga={self.harga}, level_pedas='{self.level_pedas}')"
+        return f"Makanan(id={self.id}, nama='{self.nama}', harga={self.harga})"
 
 
 class Minuman(ItemMenu):
@@ -76,17 +71,12 @@ class Minuman(ItemMenu):
     Child Class (Kelas Turunan) dari ItemMenu — merepresentasikan item minuman.
 
     Pilar Pewarisan: Mewarisi id, nama, harga, restoran_id dari ItemMenu.
-    Pilar Polimorfisme: Meng-override method tampilkan_info() dengan format
-    yang menyertakan informasi suhu minuman.
-
-    Tambahan atribut:
-        is_dingin (bool): True jika minuman disajikan dingin, False jika panas.
+    Pilar Polimorfisme: Meng-override method tampilkan_info().
     """
 
-    def __init__(self, id: int, nama: str, harga: float, restoran_id: int, is_dingin: bool = True):
+    def __init__(self, id: int, nama: str, harga: float, restoran_id: int):
         # Memanggil __init__ dari parent class (ItemMenu)
         super().__init__(id, nama, harga, restoran_id, tipe="minuman")
-        self.is_dingin = is_dingin  # Atribut tambahan khusus subclass Minuman
 
     def tampilkan_info(self) -> str:
         """
@@ -96,7 +86,7 @@ class Minuman(ItemMenu):
         return f"[Minuman] {self.nama}"
 
     def __repr__(self):
-        return f"Minuman(id={self.id}, nama='{self.nama}', harga={self.harga}, is_dingin={self.is_dingin})"
+        return f"Minuman(id={self.id}, nama='{self.nama}', harga={self.harga})"
 
 
 def buat_item_dari_db(row: dict):
@@ -109,16 +99,14 @@ def buat_item_dari_db(row: dict):
             id=row['id'],
             nama=row['nama'],
             harga=row['harga'],
-            restoran_id=row['restoran_id'],
-            level_pedas=row.get('level_pedas', 'Tidak Pedas')
+            restoran_id=row['restoran_id']
         )
     elif row['tipe'] == 'minuman':
         return Minuman(
             id=row['id'],
             nama=row['nama'],
             harga=row['harga'],
-            restoran_id=row['restoran_id'],
-            is_dingin=bool(row.get('is_dingin', True))
+            restoran_id=row['restoran_id']
         )
     else:
         return ItemMenu(

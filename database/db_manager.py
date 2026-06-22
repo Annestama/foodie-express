@@ -66,8 +66,6 @@ class DatabaseManager:
                 nama        TEXT NOT NULL,
                 harga       REAL NOT NULL,
                 tipe        TEXT NOT NULL DEFAULT 'makanan',  -- 'makanan' atau 'minuman'
-                level_pedas TEXT DEFAULT 'Tidak Pedas',
-                is_dingin   INTEGER DEFAULT 1,
                 FOREIGN KEY (restoran_id) REFERENCES restoran(id)
             )
         """)
@@ -81,6 +79,10 @@ class DatabaseManager:
                 waktu           TEXT NOT NULL,
                 status          TEXT NOT NULL DEFAULT 'Menunggu Konfirmasi',
                 total_harga     REAL NOT NULL DEFAULT 0,
+                waktu_dikonfirmasi TEXT,
+                waktu_diproses     TEXT,
+                waktu_dikirim      TEXT,
+                waktu_selesai      TEXT,
                 FOREIGN KEY (restoran_id) REFERENCES restoran(id)
             )
         """)
@@ -157,29 +159,29 @@ class DatabaseManager:
         conn.close()
         return dict(row) if row else None
 
-    def tambah_menu(self, restoran_id: int, nama: str, harga: float, tipe: str, level_pedas: str, is_dingin: int) -> int:
+    def tambah_menu(self, restoran_id: int, nama: str, harga: float, tipe: str) -> int:
         """Menambahkan menu baru ke database."""
         conn = self._get_connection()
         cursor = conn.cursor()
         cursor.execute(
-            """INSERT INTO menu (restoran_id, nama, harga, tipe, level_pedas, is_dingin)
-               VALUES (?, ?, ?, ?, ?, ?)""",
-            (restoran_id, nama, harga, tipe, level_pedas, is_dingin)
+            """INSERT INTO menu (restoran_id, nama, harga, tipe)
+               VALUES (?, ?, ?, ?)""",
+            (restoran_id, nama, harga, tipe)
         )
         menu_id = cursor.lastrowid
         conn.commit()
         conn.close()
         return menu_id
 
-    def update_menu(self, menu_id: int, nama: str, harga: float, tipe: str, level_pedas: str, is_dingin: int) -> bool:
+    def update_menu(self, menu_id: int, nama: str, harga: float, tipe: str) -> bool:
         """Mengupdate informasi menu."""
         conn = self._get_connection()
         cursor = conn.cursor()
         cursor.execute(
             """UPDATE menu 
-               SET nama = ?, harga = ?, tipe = ?, level_pedas = ?, is_dingin = ?
+               SET nama = ?, harga = ?, tipe = ?
                WHERE id = ?""",
-            (nama, harga, tipe, level_pedas, is_dingin, menu_id)
+            (nama, harga, tipe, menu_id)
         )
         affected = cursor.rowcount
         conn.commit()
@@ -398,12 +400,32 @@ class DatabaseManager:
         if status_baru not in status_valid:
             return False
 
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        col_to_update = None
+        
+        if status_baru == "Dikonfirmasi":
+            col_to_update = "waktu_dikonfirmasi"
+        elif status_baru == "Diproses":
+            col_to_update = "waktu_diproses"
+        elif status_baru == "Dikirim":
+            col_to_update = "waktu_dikirim"
+        elif status_baru == "Pesanan Selesai":
+            col_to_update = "waktu_selesai"
+
         conn = self._get_connection()
         cursor = conn.cursor()
-        cursor.execute(
-            "UPDATE pesanan SET status = ? WHERE id = ?",
-            (status_baru, pesanan_id)
-        )
+        
+        if col_to_update:
+            cursor.execute(
+                f"UPDATE pesanan SET status = ?, {col_to_update} = ? WHERE id = ?",
+                (status_baru, now, pesanan_id)
+            )
+        else:
+            cursor.execute(
+                "UPDATE pesanan SET status = ? WHERE id = ?",
+                (status_baru, pesanan_id)
+            )
+            
         affected = cursor.rowcount
         conn.commit()
         conn.close()

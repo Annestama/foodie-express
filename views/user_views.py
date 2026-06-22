@@ -982,26 +982,47 @@ class RiwayatFrame(tk.Frame):
             tk.Label(total_row, text=f"Rp{total:,.0f}",
                      font=FONT_LARGE, bg=BG_CARD3, fg=ACCENT_GREEN).pack(side="right")
 
-            # Status timeline
+            # Status timeline & timestamps
             tk.Frame(detail, bg=BORDER_COLOR, height=1).pack(fill="x", pady=(10, 8))
             from models.pesanan import Pesanan
             flow = Pesanan.STATUS_FLOW
-            timeline_row = tk.Frame(detail, bg=BG_CARD3)
-            timeline_row.pack(fill="x")
+            timeline_container = tk.Frame(detail, bg=BG_CARD3)
+            timeline_container.pack(fill="x")
+            
+            tk.Label(timeline_container, text="Jejak Status:", font=FONT_BOLD, bg=BG_CARD3, fg=TEXT_MUTED).pack(anchor="w", pady=(0, 4))
+            
+            ts_data = {
+                "Dikonfirmasi": pesanan.get('waktu_dikonfirmasi'),
+                "Diproses": pesanan.get('waktu_diproses'),
+                "Dikirim": pesanan.get('waktu_dikirim'),
+                "Pesanan Selesai": pesanan.get('waktu_selesai')
+            }
+            
             try:
                 cur_idx = flow.index(status)
             except ValueError:
                 cur_idx = 0
+                
             for i, s in enumerate(flow):
                 s_short = s.replace("Konfirmasi", "Konfirm.").replace("Pesanan ", "")
                 c = SUCCESS_COLOR if i < cur_idx else (color if i == cur_idx else BORDER_COLOR)
                 fg_c = BG_DARK if c not in [BORDER_COLOR, TEXT_MUTED] else TEXT_MUTED
-                lbl = tk.Label(timeline_row, text=s_short, font=FONT_SMALL,
-                               bg=c, fg=fg_c, padx=6, pady=3)
-                lbl.pack(side="left", padx=(0, 4))
-                if i < len(flow) - 1:
-                    tk.Label(timeline_row, text=">", font=FONT_SMALL,
-                             bg=BG_CARD3, fg=TEXT_MUTED).pack(side="left", padx=(0, 4))
+                
+                row_status = tk.Frame(timeline_container, bg=BG_CARD3)
+                row_status.pack(fill="x", pady=(0, 2))
+                
+                # Kotak status
+                lbl = tk.Label(row_status, text=s_short, font=FONT_SMALL,
+                               bg=c, fg=fg_c, padx=6, pady=2, width=15)
+                lbl.pack(side="left")
+                
+                # Timestamp
+                ts = ts_data.get(s)
+                if not ts and s == "Menunggu Konfirmasi":
+                    ts = pesanan.get('waktu')  # Waktu pesanan dibuat
+                    
+                ts_text = ts if ts else "-"
+                tk.Label(row_status, text=ts_text, font=FONT_SMALL, bg=BG_CARD3, fg=TEXT_MUTED).pack(side="left", padx=(10, 0))
 
     def _toggle_detail(self, pesanan_id):
         self._expanded[pesanan_id] = not self._expanded.get(pesanan_id, False)

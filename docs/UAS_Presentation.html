@@ -1,0 +1,1413 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UAS PBO — Presentasi Aplikasi Pemesanan Makanan Online</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+        :root {
+            --bg-dark: #0f0f1a;
+            --bg-card: #1a1a2e;
+            --bg-card2: #222240;
+            --accent-green: #6b9080;
+            --accent-purple: #a594f9;
+            --accent-cyan: #73a5c6;
+            --accent-orange: #e09f3e;
+            --accent-red: #e56b6f;
+            --text-primary: #f0f0f0;
+            --text-muted: #8892a4;
+            --border: #2a2a4a;
+            --gradient-1: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-2: linear-gradient(135deg, #6b9080 0%, #73a5c6 100%);
+            --gradient-3: linear-gradient(135deg, #e09f3e 0%, #e56b6f 100%);
+            --gradient-4: linear-gradient(135deg, #a594f9 0%, #667eea 100%);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            overflow: hidden;
+        }
+
+        /* ============= SLIDE SYSTEM ============= */
+        .slide {
+            display: none;
+            width: 100vw;
+            height: 100vh;
+            padding: 60px 80px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .slide.active {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(40px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        /* ============= NAVIGATION ============= */
+        .nav-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(15, 15, 26, 0.95);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid var(--border);
+            padding: 12px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .nav-bar .slide-counter {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .nav-bar .nav-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .nav-btn {
+            padding: 8px 24px;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .nav-btn:hover {
+            background: var(--accent-purple);
+            border-color: var(--accent-purple);
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background: var(--gradient-4);
+            transition: width 0.4s ease;
+            z-index: 1000;
+        }
+
+        /* ============= SLIDE NUMBERS ============= */
+        .slide-number {
+            position: absolute;
+            top: 24px;
+            right: 40px;
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 500;
+            letter-spacing: 1px;
+        }
+
+        /* ============= TYPOGRAPHY ============= */
+        .slide-tag {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--accent-purple);
+            margin-bottom: 16px;
+            padding: 4px 12px;
+            border: 1px solid var(--accent-purple);
+            border-radius: 4px;
+        }
+
+        h1 {
+            font-size: 52px;
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 16px;
+        }
+
+        h2 {
+            font-size: 36px;
+            font-weight: 800;
+            margin-bottom: 12px;
+        }
+
+        h3 {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            font-size: 18px;
+            color: var(--text-muted);
+            font-weight: 400;
+            line-height: 1.6;
+            max-width: 700px;
+        }
+
+        .gradient-text {
+            background: var(--gradient-1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .gradient-text-2 {
+            background: var(--gradient-2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .gradient-text-3 {
+            background: var(--gradient-3);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .gradient-text-4 {
+            background: var(--gradient-4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* ============= CARDS ============= */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 28px;
+            transition: all 0.3s;
+        }
+
+        .card:hover {
+            border-color: var(--accent-purple);
+            transform: translateY(-2px);
+        }
+
+        .card-grid {
+            display: grid;
+            gap: 20px;
+            margin-top: 24px;
+        }
+
+        .card-grid-2 { grid-template-columns: 1fr 1fr; }
+        .card-grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+        .card-grid-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+
+        .card-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+
+        .card-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .card-desc {
+            font-size: 13px;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        /* ============= CODE BLOCKS ============= */
+        .code-block {
+            background: #0d0d18;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px 24px;
+            font-family: 'Cascadia Code', 'Fira Code', monospace;
+            font-size: 13px;
+            line-height: 1.7;
+            overflow-x: auto;
+            margin-top: 12px;
+            white-space: pre;
+        }
+
+        .code-block .keyword { color: #c678dd; }
+        .code-block .string { color: #98c379; }
+        .code-block .comment { color: #5c6370; font-style: italic; }
+        .code-block .function { color: #61afef; }
+        .code-block .class-name { color: #e5c07b; }
+        .code-block .decorator { color: #e09f3e; }
+        .code-block .param { color: #e06c75; }
+        .code-block .number { color: #d19a66; }
+
+        /* ============= TREE STRUCTURE ============= */
+        .file-tree {
+            font-family: 'Cascadia Code', 'Fira Code', monospace;
+            font-size: 13px;
+            line-height: 2;
+            color: var(--text-muted);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+        }
+
+        .file-tree .folder { color: var(--accent-cyan); font-weight: 600; }
+        .file-tree .file { color: var(--text-primary); }
+        .file-tree .annotation { color: var(--accent-purple); font-size: 11px; }
+
+        /* ============= BADGES ============= */
+        .badge {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 6px;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-green { background: rgba(107,144,128,0.2); color: var(--accent-green); border: 1px solid var(--accent-green); }
+        .badge-purple { background: rgba(165,148,249,0.2); color: var(--accent-purple); border: 1px solid var(--accent-purple); }
+        .badge-orange { background: rgba(224,159,62,0.2); color: var(--accent-orange); border: 1px solid var(--accent-orange); }
+        .badge-cyan { background: rgba(115,165,198,0.2); color: var(--accent-cyan); border: 1px solid var(--accent-cyan); }
+        .badge-red { background: rgba(229,107,111,0.2); color: var(--accent-red); border: 1px solid var(--accent-red); }
+
+        /* ============= LISTS ============= */
+        .feature-list {
+            list-style: none;
+            margin-top: 16px;
+        }
+
+        .feature-list li {
+            font-size: 15px;
+            padding: 8px 0;
+            color: var(--text-muted);
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .feature-list li .bullet {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-top: 7px;
+            flex-shrink: 0;
+        }
+
+        .bullet-green { background: var(--accent-green); }
+        .bullet-purple { background: var(--accent-purple); }
+        .bullet-orange { background: var(--accent-orange); }
+        .bullet-cyan { background: var(--accent-cyan); }
+
+        /* ============= FLOW DIAGRAM ============= */
+        .flow-horizontal {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .flow-step {
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .flow-arrow {
+            color: var(--text-muted);
+            font-size: 18px;
+        }
+
+        /* ============= TABLE ============= */
+        .styled-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+            font-size: 13px;
+        }
+
+        .styled-table th {
+            text-align: left;
+            padding: 12px 16px;
+            background: var(--bg-card2);
+            color: var(--text-muted);
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 1px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .styled-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-primary);
+        }
+
+        .styled-table tr:hover td {
+            background: rgba(165,148,249,0.05);
+        }
+
+        /* ============= DECORATIVE ============= */
+        .bg-glow {
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.08;
+            pointer-events: none;
+        }
+
+        .glow-purple { background: var(--accent-purple); }
+        .glow-green { background: var(--accent-green); }
+        .glow-orange { background: var(--accent-orange); }
+
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            align-items: start;
+        }
+
+        .divider {
+            width: 60px;
+            height: 4px;
+            border-radius: 2px;
+            margin: 16px 0;
+        }
+
+        .scroll-content {
+            max-height: calc(100vh - 180px);
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .scroll-content::-webkit-scrollbar { width: 4px; }
+        .scroll-content::-webkit-scrollbar-track { background: transparent; }
+        .scroll-content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+        /* Print styles for PPT export */
+        @media print {
+            .nav-bar, .progress-bar { display: none !important; }
+            .slide { 
+                display: flex !important; 
+                page-break-after: always;
+                height: auto;
+                min-height: 100vh;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Progress Bar -->
+<div class="progress-bar" id="progressBar"></div>
+
+<!-- ============================================================ -->
+<!-- SLIDE 1: COVER -->
+<!-- ============================================================ -->
+<div class="slide active" id="slide-1">
+    <div class="bg-glow glow-purple" style="top: -200px; right: -200px;"></div>
+    <div class="bg-glow glow-green" style="bottom: -200px; left: -100px;"></div>
+    <div class="slide-number">01</div>
+
+    <div class="slide-tag">UAS Pemrograman Berorientasi Objek</div>
+    <h1>Aplikasi Pemesanan<br>Makanan Online<br><span class="gradient-text">FoodOrder &amp; RestaurantOS</span></h1>
+    <p class="subtitle" style="margin-top: 12px;">
+        Multi-App System berbasis Python Tkinter &amp; SQLite — mengimplementasikan arsitektur MVC, 4 Pilar OOP, dan real-time data polling.
+    </p>
+    <div style="margin-top: 32px; display: flex; gap: 12px;">
+        <span class="badge badge-green">Python 3.10+</span>
+        <span class="badge badge-purple">Tkinter GUI</span>
+        <span class="badge badge-orange">SQLite3</span>
+        <span class="badge badge-cyan">Multi-App</span>
+    </div>
+    <p style="margin-top: 40px; font-size: 14px; color: var(--text-muted);">
+        Disusun oleh: <strong style="color: var(--text-primary);">Zildjian Annesta</strong><br>
+        Mata Kuliah: PBO &bull; Tahun 2026
+    </p>
+</div>
+
+<!-- ============================================================ -->
+<!-- SLIDE 2: GAMBARAN UMUM -->
+<!-- ============================================================ -->
+<div class="slide" id="slide-2">
+    <div class="bg-glow glow-green" style="top: -100px; right: -200px;"></div>
+    <div class="slide-number">02</div>
+
+    <div class="slide-tag">Gambaran Umum</div>
+    <h2>Apa itu <span class="gradient-text-2">FoodOrder</span>?</h2>
+    <p class="subtitle">Ekosistem pemesanan makanan real-time yang terdiri dari dua aplikasi terpisah, terhubung melalui shared database.</p>
+
+    <div class="card-grid card-grid-2" style="margin-top: 32px;">
+        <div class="card">
+            <div class="card-icon">🛒</div>
+            <div class="card-label">Sisi Pelanggan</div>
+            <div class="card-title" style="color: var(--accent-green);">User App — <code>user_app.py</code></div>
+            <div class="card-desc">
+                Aplikasi untuk pelanggan: mendaftar akun, login, memilih restoran, melihat menu, memesan makanan, checkout, dan melacak status pesanan secara real-time (polling 5 detik).
+            </div>
+            <ul class="feature-list" style="margin-top: 12px;">
+                <li><span class="bullet bullet-green"></span>Login &amp; Register akun</li>
+                <li><span class="bullet bullet-green"></span>Dashboard katalog restoran + pencarian</li>
+                <li><span class="bullet bullet-green"></span>Halaman menu per restoran</li>
+                <li><span class="bullet bullet-green"></span>Keranjang belanja &amp; checkout</li>
+                <li><span class="bullet bullet-green"></span>Riwayat &amp; tracking pesanan real-time</li>
+            </ul>
+        </div>
+        <div class="card">
+            <div class="card-icon">🏪</div>
+            <div class="card-label">Sisi Restoran</div>
+            <div class="card-title" style="color: var(--accent-orange);">Restaurant App — <code>restaurant_app.py</code></div>
+            <div class="card-desc">
+                Aplikasi untuk kasir/admin: memilih restoran, mengelola antrian pesanan masuk, mengupdate status pesanan secara sequential, manajemen menu (CRUD), dan melihat laporan penjualan.
+            </div>
+            <ul class="feature-list" style="margin-top: 12px;">
+                <li><span class="bullet bullet-orange"></span>Login kasir — pilih restoran</li>
+                <li><span class="bullet bullet-orange"></span>Dashboard transaksi masuk (polling 10 detik)</li>
+                <li><span class="bullet bullet-orange"></span>Update status pesanan berurutan</li>
+                <li><span class="bullet bullet-orange"></span>Manajemen menu (Tambah, Edit, Hapus)</li>
+                <li><span class="bullet bullet-orange"></span>Laporan pendapatan &amp; menu terlaris</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SLIDE 3: ARSITEKTUR & STRUKTUR PROYEK -->
+<!-- ============================================================ -->
+<div class="slide" id="slide-3">
+    <div class="bg-glow glow-purple" style="bottom: -100px; left: -100px;"></div>
+    <div class="slide-number">03</div>
+
+    <div class="slide-tag">Arsitektur</div>
+    <h2>Struktur Proyek &amp; <span class="gradient-text">Arsitektur MVC</span></h2>
+
+    <div class="two-col" style="margin-top: 24px;">
+        <div class="file-tree">
+<span class="folder">uas-pbo/</span>
+├── <span class="folder">models/</span>                      <span class="annotation">← MODEL LAYER (OOP)</span>
+│   ├── <span class="file">base.py</span>              <span class="annotation">[Abstraksi]</span>
+│   ├── <span class="file">item_menu.py</span>         <span class="annotation">[Pewarisan + Polimorfisme]</span>
+│   ├── <span class="file">pesanan.py</span>           <span class="annotation">[Enkapsulasi]</span>
+│   └── <span class="file">keranjang.py</span>         <span class="annotation">[Enkapsulasi]</span>
+├── <span class="folder">database/</span>                    <span class="annotation">← DATA ACCESS LAYER</span>
+│   ├── <span class="file">db_manager.py</span>        <span class="annotation">[SQLite CRUD]</span>
+│   └── <span class="file">seed_data.py</span>         <span class="annotation">[Data Awal]</span>
+├── <span class="folder">views/</span>                       <span class="annotation">← VIEW LAYER (Tkinter GUI)</span>
+│   ├── <span class="file">user_views.py</span>        <span class="annotation">[6 Frame UI User]</span>
+│   └── <span class="file">restaurant_views.py</span>  <span class="annotation">[4 Frame UI Admin]</span>
+├── <span class="file">user_app.py</span>              <span class="annotation">← CONTROLLER (User)</span>
+├── <span class="file">restaurant_app.py</span>        <span class="annotation">← CONTROLLER (Admin)</span>
+└── <span class="file">pemesanan.db</span>             <span class="annotation">[SQLite Database]</span>
+        </div>
+
+        <div>
+            <div class="card" style="margin-bottom: 16px;">
+                <div class="card-title" style="color: var(--accent-cyan);">Model Layer</div>
+                <div class="card-desc">Berisi class-class Python murni (POJO) yang mendemonstrasikan 4 pilar OOP. Tidak bergantung pada UI.</div>
+            </div>
+            <div class="card" style="margin-bottom: 16px;">
+                <div class="card-title" style="color: var(--accent-green);">View Layer</div>
+                <div class="card-desc">Komponen Tkinter (Frame) untuk menampilkan antarmuka pengguna. Total 10+ Frame di dua aplikasi.</div>
+            </div>
+            <div class="card" style="margin-bottom: 16px;">
+                <div class="card-title" style="color: var(--accent-orange);">Controller Layer</div>
+                <div class="card-desc">Entry point tiap aplikasi. Mengelola navigasi, state session, dan menjembatani Model ↔ View.</div>
+            </div>
+            <div class="card">
+                <div class="card-title" style="color: var(--accent-purple);">Data Access Layer</div>
+                <div class="card-desc">DatabaseManager mengelola koneksi SQLite, semua operasi CRUD, dengan WAL mode untuk concurrent access.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SLIDE 4: PILAR OOP #1 — ABSTRAKSI -->
+<!-- ============================================================ -->
+<div class="slide" id="slide-4">
+    <div class="bg-glow glow-purple" style="top: -100px; left: -200px;"></div>
+    <div class="slide-number">04</div>
+
+    <div class="slide-tag">4 Pilar OOP — Pilar #1</div>
+    <h2><span class="gradient-text-4">Abstraksi</span> (Abstraction)</h2>
+    <p class="subtitle">Membuat blueprint menggunakan Abstract Base Class (ABC) yang mewajibkan subclass mengimplementasikan method tertentu.</p>
+
+    <div class="two-col" style="margin-top: 24px;">
+        <div>
+            <h3>📁 <code>models/base.py</code></h3>
+            <div class="code-block"><span class="keyword">from</span> abc <span class="keyword">import</span> ABC, abstractmethod
+
+<span class="keyword">class</span> <span class="class-name">Pengguna</span>(ABC):
+    <span class="string">"""Abstract Base Class — tidak bisa diinstansiasi langsung."""</span>
+
+    <span class="keyword">def</span> <span class="function">__init__</span>(<span class="param">self</span>, nama: <span class="class-name">str</span>):
+        <span class="param">self</span>.nama = nama
+
+    <span class="decorator">@abstractmethod</span>
+    <span class="keyword">def</span> <span class="function">tampilkan_dashboard</span>(<span class="param">self</span>):
+        <span class="string">"""Kontrak: WAJIB di-override oleh subclass."""</span>
+        <span class="keyword">pass</span>
+
+    <span class="keyword">def</span> <span class="function">sapa</span>(<span class="param">self</span>) -> <span class="class-name">str</span>:
+        <span class="keyword">return</span> <span class="string">f"Selamat datang, {self.nama}!"</span></div>
+        </div>
+
+        <div>
+            <h3>Implementasi di Subclass</h3>
+            <div class="code-block"><span class="comment"># user_app.py</span>
+<span class="keyword">class</span> <span class="class-name">Pelanggan</span>(Pengguna):
+    <span class="keyword">def</span> <span class="function">tampilkan_dashboard</span>(<span class="param">self</span>):
+        <span class="param">self</span>.app_root.deiconify()
+        print(<span class="string">f"Dashboard Pelanggan aktif."</span>)
+
+<span class="comment"># restaurant_app.py</span>
+<span class="keyword">class</span> <span class="class-name">Kasir</span>(Pengguna):
+    <span class="keyword">def</span> <span class="function">tampilkan_dashboard</span>(<span class="param">self</span>):
+        <span class="param">self</span>.app_root.deiconify()
+        print(<span class="string">f"Dashboard Kasir aktif."</span>)</div>
+
+            <div class="card" style="margin-top: 16px; border-left: 3px solid var(--accent-purple);">
+                <div class="card-title" style="font-size: 14px;">💡 Mengapa ini Abstraksi?</div>
+                <div class="card-desc">
+                    Class <code>Pengguna</code> hanya membuat aturan (kontrak) bahwa subclass <strong>WAJIB</strong> memiliki <code>tampilkan_dashboard()</code>. Class ini tidak bisa di-instansiasi langsung — memaksa developer menggunakan <code>Pelanggan</code> atau <code>Kasir</code>.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SLIDE 5: PILAR OOP #2 — ENKAPSULASI -->
+<!-- ============================================================ -->
+<div class="slide" id="slide-5">
+    <div class="bg-glow glow-green" style="bottom: -200px; right: -100px;"></div>
+    <div class="slide-number">05</div>
+
+    <div class="slide-tag">4 Pilar OOP — Pilar #2</div>
+    <h2><span class="gradient-text-2">Enkapsulasi</span> (Encapsulation)</h2>
+    <p class="subtitle">Melindungi data internal menggunakan atribut private (__) dan protected (_). Akses hanya melalui getter/setter yang memiliki validasi.</p>
+
+    <div class="two-col" style="margin-top: 24px;">
+        <div>
+            <h3>📁 <code>models/pesanan.py</code> — Atribut Private</h3>
+            <div class="code-block"><span class="keyword">class</span> <span class="class-name">Pesanan</span>:
+    STATUS_FLOW = [<span class="string">"Menunggu"</span>, <span class="string">"Dikonfirmasi"</span>,
+                   <span class="string">"Diproses"</span>, <span class="string">"Dikirim"</span>, <span class="string">"Selesai"</span>]
+
+    <span class="keyword">def</span> <span class="function">__init__</span>(<span class="param">self</span>, ...):
+        <span class="comment"># Atribut PRIVATE — dilindungi</span>
+        <span class="param">self</span>.<span class="param">__total_harga</span> = total_harga
+        <span class="param">self</span>.<span class="param">__status_pengiriman</span> = status
+
+    <span class="comment"># GETTER — satu-satunya cara baca</span>
+    <span class="keyword">def</span> <span class="function">get_total</span>(<span class="param">self</span>) -> <span class="class-name">float</span>:
+        <span class="keyword">return</span> <span class="param">self</span>.__total_harga
+
+    <span class="comment"># SETTER — hanya bisa maju 1 langkah</span>
+    <span class="keyword">def</span> <span class="function">set_status</span>(<span class="param">self</span>, new_status):
+        current_idx = self.STATUS_FLOW.index(...)
+        new_idx = self.STATUS_FLOW.index(new_status)
+        <span class="keyword">if</span> new_idx == current_idx + <span class="number">1</span>:
+            <span class="param">self</span>.__status_pengiriman = new_status
+            <span class="keyword">return</span> <span class="keyword">True</span>
+        <span class="keyword">return</span> <span class="keyword">False</span></div>
+        </div>
+
+        <div>
+            <h3>📁 <code>models/keranjang.py</code> — Atribut Protected</h3>
+            <div class="code-block"><span class="keyword">class</span> <span class="class-name">KeranjangBelanja</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(<span class="param">self</span>):
+        <span class="comment"># Protected — akses via method saja</span>
+        <span class="param">self</span>.<span class="param">_items</span>: list[dict] = []
+
+    <span class="keyword">def</span> <span class="function">tambah_item</span>(<span class="param">self</span>, ...):
+        <span class="keyword">if</span> qty <= <span class="number">0</span>: <span class="keyword">return</span> <span class="keyword">False</span>
+        <span class="comment"># Validasi duplikat & kalkulasi subtotal</span>
+
+    <span class="keyword">def</span> <span class="function">get_items</span>(<span class="param">self</span>) -> list:
+        <span class="keyword">return</span> list(<span class="param">self</span>._items)  <span class="comment"># Salinan!</span></div>
+
+            <div class="card" style="margin-top: 16px; border-left: 3px solid var(--accent-green);">
+                <div class="card-title" style="font-size: 14px;">💡 Mengapa ini Enkapsulasi?</div>
+                <div class="card-desc">
+                    Data sensitif (<code>__total_harga</code>, <code>__status_pengiriman</code>, <code>_items</code>) <strong>tidak bisa dimodifikasi</strong> langsung dari luar class. Status pesanan <strong>hanya bisa maju 1 langkah</strong> melalui <code>set_status()</code> — tidak bisa lompat atau mundur.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SLIDE 6: PILAR OOP #3 — PEWARISAN -->
+<!-- ============================================================ -->
+<div class="slide" id="slide-6">
+    <div class="bg-glow glow-orange" style="top: -200px; right: -100px;"></div>
+    <div class="slide-number">06</div>
+
+    <div class="slide-tag">4 Pilar OOP — Pilar #3</div>
+    <h2><span class="gradient-text-3">Pewarisan</span> (Inheritance)</h2>
+    <p class="subtitle">Child class mewarisi atribut dan method dari parent class, lalu menambahkan atribut unik miliknya sendiri.</p>
+
+    <div class="two-col" style="margin-top: 24px;">
+        <div>
+            <h3>📁 <code>models/item_menu.py</code></h3>
+            <div class="code-block"><span class="comment"># PARENT CLASS</span>
+<span class="keyword">class</span> <span class="class-name">ItemMenu</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(<span class="param">self</span>, id, nama, harga, restoran_id):
+        <span class="param">self</span>.id = id
+        <span class="param">self</span>.nama = nama
+        <span class="param">self</span>.harga = harga
+        <span class="param">self</span>.restoran_id = restoran_id
+
+<span class="comment"># CHILD CLASS — Makanan</span>
+<span class="keyword">class</span> <span class="class-name">Makanan</span>(<span class="class-name">ItemMenu</span>):
+    <span class="keyword">def</span> <span class="function">__init__</span>(<span class="param">self</span>, ..., level_pedas=<span class="string">"Tidak Pedas"</span>):
+        <span class="keyword">super</span>().__init__(...)  <span class="comment"># Warisi dari ItemMenu</span>
+        <span class="param">self</span>.level_pedas = level_pedas  <span class="comment"># Atribut unik</span>
+
+<span class="comment"># CHILD CLASS — Minuman</span>
+<span class="keyword">class</span> <span class="class-name">Minuman</span>(<span class="class-name">ItemMenu</span>):
+    <span class="keyword">def</span> <span class="function">__init__</span>(<span class="param">self</span>, ..., is_dingin=<span class="keyword">True</span>):
+        <span class="keyword">super</span>().__init__(...)  <span class="comment"># Warisi dari ItemMenu</span>
+        <span class="param">self</span>.is_dingin = is_dingin  <span class="comment"># Atribut unik</span></div>
+        </div>
+
+        <div>
+            <h3>Diagram Pewarisan</h3>
+            <div class="card" style="text-align: center; padding: 30px;">
+                <div style="display: inline-block; background: var(--bg-card2); padding: 14px 30px; border-radius: 10px; border: 2px solid var(--accent-cyan); font-weight: 700; font-size: 16px; margin-bottom: 4px;">
+                    Pengguna (ABC)
+                </div>
+                <div style="color: var(--text-muted); font-size: 24px;">↓ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ↓</div>
+                <div style="display: flex; justify-content: center; gap: 16px; margin-bottom: 24px;">
+                    <div style="background: var(--bg-card2); padding: 10px 24px; border-radius: 10px; border: 2px solid var(--accent-green); font-weight: 600; font-size: 14px;">Pelanggan</div>
+                    <div style="background: var(--bg-card2); padding: 10px 24px; border-radius: 10px; border: 2px solid var(--accent-orange); font-weight: 600; font-size: 14px;">Kasir</div>
+                </div>
+
+                <div style="display: inline-block; background: var(--bg-card2); padding: 14px 30px; border-radius: 10px; border: 2px solid var(--accent-purple); font-weight: 700; font-size: 16px; margin-bottom: 4px;">
+                    ItemMenu (Parent)
+                </div>
+                <div style="color: var(--text-muted); font-size: 24px;">↓ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ↓</div>
+                <div style="display: flex; justify-content: center; gap: 16px;">
+                    <div style="background: var(--bg-card2); padding: 10px 24px; border-radius: 10px; border: 2px solid var(--accent-red); font-weight: 600; font-size: 14px;">Makanan<br><span style="font-size: 11px; color: var(--text-muted);">+ level_pedas</span></div>
+                    <div style="background: var(--bg-card2); padding: 10px 24px; border-radius: 10px; border: 2px solid var(--accent-cyan); font-weight: 600; font-size: 14px;">Minuman<br><span style="font-size: 11px; color: var(--text-muted);">+ is_dingin</span></div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top: 16px; border-left: 3px solid var(--accent-orange);">
+                <div class="card-title" style="font-size: 14px;">💡 Mengapa ini Pewarisan?</div>
+                <div class="card-desc">
+                    <code>Makanan</code> dan <code>Minuman</code> <strong>tidak perlu mendefinisikan ulang</strong> atribut <code>id</code>, <code>nama</code>, <code>harga</code> — semua diwarisi dari <code>ItemMenu</code> via <code>super().__init__()</code>. Masing-masing hanya menambah atribut spesifik.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SLIDE 7: PILAR OOP #4 — POLIMORFISME -->
+<!-- ============================================================ -->
+<div class="slide" id="slide-7">
+    <div class="bg-glow glow-purple" style="bottom: -100px; left: -200px;"></div>
+    <div class="slide-number">07</div>
+
+    <div class="slide-tag">4 Pilar OOP — Pilar #4</div>
+    <h2><span class="gradient-text">Polimorfisme</span> (Polymorphism)</h2>
+    <p class="subtitle">Satu method yang sama menghasilkan perilaku berbeda tergantung objek pemanggilnya (Method Overriding).</p>
+
+    <div class="two-col" style="margin-top: 24px;">
+        <div>
+            <h3>📁 <code>models/item_menu.py</code> — Override <code>tampilkan_info()</code></h3>
+            <div class="code-block"><span class="comment"># Parent method (dasar)</span>
+<span class="keyword">class</span> <span class="class-name">ItemMenu</span>:
+    <span class="keyword">def</span> <span class="function">tampilkan_info</span>(<span class="param">self</span>) -> <span class="class-name">str</span>:
+        <span class="keyword">return</span> <span class="string">f"{self.nama} - Rp{self.harga:,.0f}"</span>
+
+<span class="comment"># Override di Makanan</span>
+<span class="keyword">class</span> <span class="class-name">Makanan</span>(<span class="class-name">ItemMenu</span>):
+    <span class="keyword">def</span> <span class="function">tampilkan_info</span>(<span class="param">self</span>) -> <span class="class-name">str</span>:
+        <span class="keyword">return</span> <span class="string">f"[Makanan] {self.nama}"</span>
+
+<span class="comment"># Override di Minuman</span>
+<span class="keyword">class</span> <span class="class-name">Minuman</span>(<span class="class-name">ItemMenu</span>):
+    <span class="keyword">def</span> <span class="function">tampilkan_info</span>(<span class="param">self</span>) -> <span class="class-name">str</span>:
+        <span class="keyword">return</span> <span class="string">f"[Minuman] {self.nama}"</span></div>
+
+            <h3 style="margin-top: 20px;">Factory Function (Polimorfisme Konstruksi)</h3>
+            <div class="code-block"><span class="keyword">def</span> <span class="function">buat_item_dari_db</span>(row: dict):
+    <span class="keyword">if</span> row[<span class="string">'tipe'</span>] == <span class="string">'makanan'</span>:
+        <span class="keyword">return</span> <span class="class-name">Makanan</span>(...)   <span class="comment"># Objek Makanan</span>
+    <span class="keyword">elif</span> row[<span class="string">'tipe'</span>] == <span class="string">'minuman'</span>:
+        <span class="keyword">return</span> <span class="class-name">Minuman</span>(...)   <span class="comment"># Objek Minuman</span>
+    <span class="keyword">else</span>:
+        <span class="keyword">return</span> <span class="class-name">ItemMenu</span>(...)  <span class="comment"># Objek generik</span></div>
+        </div>
+
+        <div>
+            <h3>Contoh Output</h3>
+            <div class="card" style="margin-bottom: 16px;">
+                <div style="font-family: monospace; font-size: 14px;">
+                    <div style="padding: 10px 0; border-bottom: 1px solid var(--border);">
+                        <span style="color: var(--accent-orange);">[Makanan]</span> Rendang Sapi
+                    </div>
+                    <div style="padding: 10px 0; border-bottom: 1px solid var(--border);">
+                        <span style="color: var(--accent-orange);">[Makanan]</span> Ayam Pop
+                    </div>
+                    <div style="padding: 10px 0; border-bottom: 1px solid var(--border);">
+                        <span style="color: var(--accent-cyan);">[Minuman]</span> Es Teh Manis
+                    </div>
+                    <div style="padding: 10px 0;">
+                        <span style="color: var(--accent-cyan);">[Minuman]</span> Matcha Latte Dingin
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-bottom: 16px; border-left: 3px solid var(--accent-purple);">
+                <div class="card-title" style="font-size: 14px;">💡 Mengapa ini Polimorfisme?</div>
+                <div class="card-desc">
+                    Saat UI meloop daftar menu dan memanggil <code>item.tampilkan_info()</code>, hasilnya <strong>otomatis berbeda</strong> tergantung apakah objeknya <code>Makanan</code> atau <code>Minuman</code>. Nama method <strong>persis sama</strong>, tapi perilaku berbeda.
+                </div>
+            </div>
+
+            <h3>Pemanggilan di View</h3>
+            <div class="code-block"><span class="comment"># views/user_views.py — MenuFrame</span>
+<span class="keyword">for</span> item <span class="keyword">in</span> self.menu_items:
+    <span class="comment"># Polimorfisme terjadi di sini!</span>
+    lbl = tk.Label(text=item.<span class="function">tampilkan_info</span>())</div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SLIDE 8: IMPLEMENTASI PRD — USER APP -->
+<!-- ============================================================ -->
+<div class="slide" id="slide-8">
+    <div class="bg-glow glow-green" style="top: -100px; left: -100px;"></div>
+    <div class="slide-number">08</div>
+
+    <div class="slide-tag">Implementasi PRD</div>
+    <h2>Fitur User App sesuai <span class="gradient-text-2">PRD</span></h2>
+
+    <div class="scroll-content">
+        <table class="styled-table" style="margin-top: 20px;">
+            <thead>
+                <tr>
+                    <th>No</th>
+                    <th>Fitur PRD</th>
+                    <th>Implementasi</th>
+                    <th>File</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><span class="badge badge-green">2.1</span></td>
+                    <td><strong>Dashboard Utama</strong> — Katalog restoran aktif, filter pencarian</td>
+                    <td>Class <code>DashboardFrame</code> dengan search bar, scrollable card list, "Belum ada restoran" fallback</td>
+                    <td><code>views/user_views.py</code></td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-green">2.2</span></td>
+                    <td><strong>Halaman Menu</strong> — Menu terkunci per restoran, validasi qty integer &gt; 0</td>
+                    <td>Class <code>MenuFrame</code> + <code>buat_item_dari_db()</code>, validasi input, tombol +/-, spinbox qty</td>
+                    <td><code>views/user_views.py</code></td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-green">2.3</span></td>
+                    <td><strong>Keranjang &amp; Checkout</strong> — Subtotal dinamis, hapus jika qty=0, checkout disabled jika kosong</td>
+                    <td>Class <code>KeranjangFrame</code> + <code>KeranjangBelanja</code>, edit inline, grand total, tombol disabled</td>
+                    <td><code>views/user_views.py</code> + <code>models/keranjang.py</code></td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-green">2.4</span></td>
+                    <td><strong>Lacak Pesanan</strong> — Polling 5 detik, tombol selesai aktif hanya jika "Dikirim"</td>
+                    <td>Class <code>RiwayatFrame</code> dengan <code>self.after(5000)</code>, validasi tombol konfirmasi</td>
+                    <td><code>views/user_views.py</code></td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-purple">Extra</span></td>
+                    <td><strong>Login &amp; Register</strong> — Sistem akun pelanggan dengan hashing SHA-256</td>
+                    <td>Class <code>LoginFrame</code>, <code>RegisterFrame</code>, method <code>authenticate_user()</code></td>
+                    <td><code>views/user_views.py</code> + <code>database/db_manager.py</code></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3 style="margin-top: 30px;">Alur Penggunaan User App</h3>
+        <div class="flow-horizontal">
+            <div class="flow-step" style="background: var(--bg-card2); color: var(--text-primary);">Login</div>
+            <span class="flow-arrow">→</span>
+            <div class="flow-step" style="background: rgba(107,144,128,0.2); color: var(--accent-green);">Dashboard</div>
+            <span class="flow-arrow">→</span>
+            <div class="flow-step" style="background: rgba(107,144,128,0.2); color: var(--accent-green);">Pilih Restoran</div>
+            <span class="flow-arrow">→</span>
+            <div class="flow-step" style="background: rgba(165,148,249,0.2); color: var(--accent-purple);">Menu</div>
+            <span class="flow-arrow">→</span>
+            <div class="flow-step" style="background: rgba(165,148,249,0.2); color: var(--accent-purple);">Keranjang</div>
+            <span class="flow-arrow">→</span>
+            <div class="flow-step" style="background: rgba(224,159,62,0.2); color: var(--accent-orange);">Checkout</div>
+            <span class="flow-arrow">→</span>
+            <div class="flow-step" style="background: rgba(115,165,198,0.2); color: var(--accent-cyan);">Lacak (Polling 5s)</div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SLIDE 9: IMPLEMENTASI PRD — RESTAURANT APP -->
+<!-- ============================================================ -->
+<div class="slide" id="slide-9">
+    <div class="bg-glow glow-orange" style="bottom: -200px; right: -100px;"></div>
+    <div class="slide-number">09</div>
+
+    <div class="slide-tag">Implementasi PRD</div>
+    <h2>Fitur Restaurant App sesuai <span class="gradient-text-3">PRD</span></h2>
+
+    <div class="scroll-content">
+        <table class="styled-table" style="margin-top: 20px;">
+            <thead>
+                <tr>
+                    <th>No</th>
+                    <th>Fitur PRD</th>
+                    <th>Implementasi</th>
+                    <th>File</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><span class="badge badge-orange">3.1</span></td>
+                    <td><strong>Dashboard Transaksi Masuk</strong> — Filter status, polling 10 detik</td>
+                    <td>Class <code>PesananFrame</code> dengan Combobox filter, <code>self.after(10000)</code></td>
+                    <td><code>views/restaurant_views.py</code></td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-orange">3.2</span></td>
+                    <td><strong>Update Status Pesanan</strong> — Urutan sequential mutlak, tidak bisa lompat</td>
+                    <td>Method <code>update_status()</code> menggunakan <code>Pesanan.set_status()</code> dengan validasi</td>
+                    <td><code>views/restaurant_views.py</code> + <code>models/pesanan.py</code></td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-purple">Extra</span></td>
+                    <td><strong>Manajemen Menu</strong> — CRUD menu restoran (tambah, edit, hapus)</td>
+                    <td>Class <code>ManajemenMenuFrame</code> dengan form split-layout</td>
+                    <td><code>views/restaurant_views.py</code></td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-purple">Extra</span></td>
+                    <td><strong>Laporan Penjualan</strong> — Total pendapatan &amp; menu terlaris</td>
+                    <td>Class <code>LaporanFrame</code> + method <code>get_statistik_pendapatan()</code></td>
+                    <td><code>views/restaurant_views.py</code> + <code>database/db_manager.py</code></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3 style="margin-top: 30px;">Status Flow (Sequential)</h3>
+        <div class="flow-horizontal">
+            <div class="flow-step" style="background: rgba(224,159,62,0.3); color: var(--accent-orange); border: 1px solid var(--accent-orange);">Menunggu Konfirmasi</div>
+            <span class="flow-arrow">→</span>
+            <div class="flow-step" style="background: rgba(115,165,198,0.3); color: var(--accent-cyan); border: 1px solid var(--accent-cyan);">Dikonfirmasi</div>
+            <span class="flow-arrow">→</span>
+            <div class="flow-step" style="background: rgba(165,148,249,0.3); color: var(--accent-purple); border: 1px solid var(--accent-purple);">Diproses</div>
+            <span class="flow-arrow">→</span>
+            <div class="flow-step" style="background: rgba(107,144,128,0.3); color: var(--accent-green); border: 1px solid var(--accent-green);">Dikirim</div>
+            <span class="flow-arrow">→</span>
+            <div class="flow-step" style="background: rgba(107,114,128,0.3); color: #9ca3af; border: 1px solid #6b7280;">Pesanan Selesai</div>
+        </div>
+        <p style="margin-top: 12px; font-size: 13px; color: var(--text-muted);">
+            ⚠️ Validasi di <code>Pesanan.set_status()</code> memastikan status <strong>hanya bisa maju 1 langkah</strong>. Tidak bisa lompat dari "Menunggu" ke "Dikirim".
+        </p>
+
+        <h3 style="margin-top: 24px;">Alur Penggunaan Restaurant App</h3>
+        <div class="flow-horizontal">
+            <div class="flow-step" style="background: var(--bg-card2); color: var(--text-primary);">Pilih Restoran</div>
+            <span class="flow-arrow">→</span>
+            <div class="flow-step" style="background: rgba(224,159,62,0.2); color: var(--accent-orange);">Dashboard (Tab)</div>
+            <span class="flow-arrow">→</span>
+            <div class="flow-step" style="background: rgba(115,165,198,0.2); color: var(--accent-cyan);">Pilih Pesanan</div>
+            <span class="flow-arrow">→</span>
+            <div class="flow-step" style="background: rgba(107,144,128,0.2); color: var(--accent-green);">Update Status</div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SLIDE 10: DATABASE DESIGN -->
+<!-- ============================================================ -->
+<div class="slide" id="slide-10">
+    <div class="bg-glow glow-cyan" style="top: -200px; right: -200px;"></div>
+    <div class="slide-number">10</div>
+
+    <div class="slide-tag">Database</div>
+    <h2>Desain <span class="gradient-text-2">Database</span> SQLite</h2>
+    <p class="subtitle">Shared database yang digunakan oleh kedua aplikasi, dengan WAL mode untuk concurrent access.</p>
+
+    <div class="card-grid card-grid-2" style="margin-top: 20px;">
+        <div>
+            <h3>Entity Relationship</h3>
+            <div class="card" style="font-family: monospace; font-size: 13px; line-height: 2;">
+                <div style="color: var(--accent-cyan); font-weight: 700;">📦 users</div>
+                <div style="padding-left: 16px; color: var(--text-muted);">id | username | password (SHA-256) | nama_lengkap</div>
+                <br>
+                <div style="color: var(--accent-green); font-weight: 700;">🏪 restoran</div>
+                <div style="padding-left: 16px; color: var(--text-muted);">id | nama | deskripsi | aktif</div>
+                <br>
+                <div style="color: var(--accent-orange); font-weight: 700;">🍕 menu</div>
+                <div style="padding-left: 16px; color: var(--text-muted);">id | restoran_id (FK) | nama | harga | tipe | level_pedas | is_dingin</div>
+                <br>
+                <div style="color: var(--accent-purple); font-weight: 700;">📋 pesanan</div>
+                <div style="padding-left: 16px; color: var(--text-muted);">id | restoran_id (FK) | nama_pemesan | waktu | status | total_harga</div>
+                <br>
+                <div style="color: var(--accent-red); font-weight: 700;">📝 detail_pesanan</div>
+                <div style="padding-left: 16px; color: var(--text-muted);">id | pesanan_id (FK) | menu_id (FK) | nama_menu | qty | subtotal</div>
+            </div>
+        </div>
+
+        <div>
+            <h3>DatabaseManager Features</h3>
+            <div class="card" style="margin-bottom: 12px;">
+                <div class="card-label">Koneksi</div>
+                <div class="card-desc">WAL mode + Foreign Key ON untuk concurrent read/write antara User App dan Restaurant App.</div>
+            </div>
+            <div class="card" style="margin-bottom: 12px;">
+                <div class="card-label">Auto-Init</div>
+                <div class="card-desc">Tabel dibuat otomatis saat pertama kali <code>DatabaseManager</code> diinstansiasi. Data demo via <code>seed_data.py</code>.</div>
+            </div>
+            <div class="card" style="margin-bottom: 12px;">
+                <div class="card-label">CRUD Operations</div>
+                <div class="card-desc">16+ method: <code>get_semua_restoran()</code>, <code>buat_pesanan()</code>, <code>update_status_pesanan()</code>, <code>get_menu_terlaris()</code>, dll.</div>
+            </div>
+            <div class="card">
+                <div class="card-label">Security</div>
+                <div class="card-desc">Password di-hash menggunakan SHA-256 sebelum disimpan. Method <code>_hash_password()</code> bersifat private.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SLIDE 11: RINGKASAN PEMETAAN OOP vs PRD -->
+<!-- ============================================================ -->
+<div class="slide" id="slide-11">
+    <div class="bg-glow glow-purple" style="top: -100px; left: -200px;"></div>
+    <div class="slide-number">11</div>
+
+    <div class="slide-tag">Ringkasan</div>
+    <h2>Peta <span class="gradient-text-4">OOP ↔ PRD</span></h2>
+
+    <div class="scroll-content">
+        <table class="styled-table" style="margin-top: 20px;">
+            <thead>
+                <tr>
+                    <th>Pilar OOP</th>
+                    <th>File</th>
+                    <th>Class / Method</th>
+                    <th>Fitur PRD yang Didukung</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><span class="badge badge-purple">Abstraksi</span></td>
+                    <td><code>models/base.py</code></td>
+                    <td><code>Pengguna(ABC)</code> → <code>@abstractmethod tampilkan_dashboard()</code></td>
+                    <td>Memastikan User App dan Restaurant App memiliki dashboard sendiri</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-green">Enkapsulasi</span></td>
+                    <td><code>models/pesanan.py</code></td>
+                    <td><code>__total_harga</code>, <code>__status_pengiriman</code>, <code>set_status()</code></td>
+                    <td>PRD 3.2: Status sequential mutlak, tidak bisa lompat</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-green">Enkapsulasi</span></td>
+                    <td><code>models/keranjang.py</code></td>
+                    <td><code>_items</code>, <code>tambah_item()</code>, <code>edit_qty()</code>, <code>get_items()</code></td>
+                    <td>PRD 2.3: Validasi keranjang, hapus jika qty=0</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-orange">Pewarisan</span></td>
+                    <td><code>models/item_menu.py</code></td>
+                    <td><code>ItemMenu</code> → <code>Makanan(ItemMenu)</code>, <code>Minuman(ItemMenu)</code></td>
+                    <td>PRD 2.2: Katalog menu terstruktur (makanan + minuman)</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-orange">Pewarisan</span></td>
+                    <td><code>user_app.py</code>, <code>restaurant_app.py</code></td>
+                    <td><code>Pelanggan(Pengguna)</code>, <code>Kasir(Pengguna)</code></td>
+                    <td>Dua entry point berbeda untuk User dan Admin</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-cyan">Polimorfisme</span></td>
+                    <td><code>models/item_menu.py</code></td>
+                    <td><code>tampilkan_info()</code> di-override oleh Makanan &amp; Minuman</td>
+                    <td>PRD 2.2: Render label berbeda untuk kategori berbeda</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-cyan">Polimorfisme</span></td>
+                    <td><code>models/item_menu.py</code></td>
+                    <td><code>buat_item_dari_db()</code> factory function</td>
+                    <td>Satu function menghasilkan objek berbeda berdasarkan tipe</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SLIDE 12: FITUR TEKNIS UNGGULAN -->
+<!-- ============================================================ -->
+<div class="slide" id="slide-12">
+    <div class="bg-glow glow-green" style="bottom: -100px; right: -200px;"></div>
+    <div class="slide-number">12</div>
+
+    <div class="slide-tag">Fitur Teknis</div>
+    <h2>Fitur <span class="gradient-text-2">Teknis Unggulan</span></h2>
+
+    <div class="card-grid card-grid-3" style="margin-top: 24px;">
+        <div class="card">
+            <div class="card-icon">🔄</div>
+            <div class="card-title" style="color: var(--accent-cyan);">Real-Time Polling</div>
+            <div class="card-desc">
+                User App polling setiap <strong>5 detik</strong>, Restaurant App setiap <strong>10 detik</strong>. Menggunakan <code>tkinter.after()</code> untuk non-blocking background refresh.
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-icon">🔒</div>
+            <div class="card-title" style="color: var(--accent-green);">Auth &amp; Security</div>
+            <div class="card-desc">
+                Sistem login/register dengan password hashing <strong>SHA-256</strong>. Username bersifat UNIQUE constraint di database.
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-icon">🏭</div>
+            <div class="card-title" style="color: var(--accent-orange);">Factory Pattern</div>
+            <div class="card-desc">
+                <code>buat_item_dari_db()</code> menerapkan Factory Method — membuat objek <code>Makanan</code> atau <code>Minuman</code> berdasarkan data database.
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-icon">📊</div>
+            <div class="card-title" style="color: var(--accent-purple);">Laporan &amp; Statistik</div>
+            <div class="card-desc">
+                Restaurant App menyediakan halaman laporan dengan total pendapatan dan ranking menu terlaris berdasarkan query SQL agregasi.
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-icon">💾</div>
+            <div class="card-title" style="color: var(--accent-cyan);">WAL Mode</div>
+            <div class="card-desc">
+                SQLite menggunakan <strong>Write-Ahead Logging</strong> agar kedua aplikasi bisa read/write database secara bersamaan tanpa lock.
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-icon">🌱</div>
+            <div class="card-title" style="color: var(--accent-green);">Auto-Seed Data</div>
+            <div class="card-desc">
+                Database otomatis terisi 3 restoran dan 24 item menu demo saat pertama kali dijalankan. Skip jika sudah ada data.
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SLIDE 13: DOKUMENTASI CODE — SEMUA FILE -->
+<!-- ============================================================ -->
+<div class="slide" id="slide-13">
+    <div class="bg-glow glow-purple" style="top: -200px; left: -100px;"></div>
+    <div class="slide-number">13</div>
+
+    <div class="slide-tag">Dokumentasi</div>
+    <h2>Daftar Lengkap <span class="gradient-text">File &amp; Class</span></h2>
+
+    <div class="scroll-content">
+        <table class="styled-table" style="margin-top: 16px;">
+            <thead>
+                <tr>
+                    <th>File</th>
+                    <th>Class / Function</th>
+                    <th>Deskripsi</th>
+                    <th>LOC</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td rowspan="1"><code>models/base.py</code></td>
+                    <td><code>Pengguna(ABC)</code></td>
+                    <td>Abstract Base Class dengan <code>@abstractmethod tampilkan_dashboard()</code></td>
+                    <td>37</td>
+                </tr>
+                <tr>
+                    <td rowspan="4"><code>models/item_menu.py</code></td>
+                    <td><code>ItemMenu</code></td>
+                    <td>Parent class menu (id, nama, harga, restoran_id)</td>
+                    <td rowspan="4">130</td>
+                </tr>
+                <tr>
+                    <td><code>Makanan(ItemMenu)</code></td>
+                    <td>Child class + atribut <code>level_pedas</code></td>
+                </tr>
+                <tr>
+                    <td><code>Minuman(ItemMenu)</code></td>
+                    <td>Child class + atribut <code>is_dingin</code></td>
+                </tr>
+                <tr>
+                    <td><code>buat_item_dari_db()</code></td>
+                    <td>Factory function — polimorfisme konstruksi objek</td>
+                </tr>
+                <tr>
+                    <td><code>models/pesanan.py</code></td>
+                    <td><code>Pesanan</code></td>
+                    <td>Enkapsulasi: <code>__total_harga</code>, <code>__status_pengiriman</code>, getter/setter</td>
+                    <td>138</td>
+                </tr>
+                <tr>
+                    <td><code>models/keranjang.py</code></td>
+                    <td><code>KeranjangBelanja</code></td>
+                    <td>Enkapsulasi: <code>_items</code>, CRUD keranjang, grand total</td>
+                    <td>123</td>
+                </tr>
+                <tr>
+                    <td><code>database/db_manager.py</code></td>
+                    <td><code>DatabaseManager</code></td>
+                    <td>16+ method CRUD, koneksi SQLite, hashing, statistik</td>
+                    <td>470</td>
+                </tr>
+                <tr>
+                    <td><code>database/seed_data.py</code></td>
+                    <td><code>seed()</code></td>
+                    <td>Data demo: 3 restoran, 24 item menu</td>
+                    <td>106</td>
+                </tr>
+                <tr>
+                    <td><code>user_app.py</code></td>
+                    <td><code>Pelanggan(Pengguna)</code>, <code>UserApp(tk.Tk)</code></td>
+                    <td>Controller User App: navigasi, session, frame management</td>
+                    <td>221</td>
+                </tr>
+                <tr>
+                    <td><code>restaurant_app.py</code></td>
+                    <td><code>Kasir(Pengguna)</code>, <code>RestaurantApp(tk.Tk)</code></td>
+                    <td>Controller Restaurant App: login, dashboard, polling</td>
+                    <td>280</td>
+                </tr>
+                <tr>
+                    <td><code>views/user_views.py</code></td>
+                    <td>6 Frame classes</td>
+                    <td>LoginFrame, RegisterFrame, DashboardFrame, MenuFrame, KeranjangFrame, RiwayatFrame</td>
+                    <td>1046</td>
+                </tr>
+                <tr>
+                    <td><code>views/restaurant_views.py</code></td>
+                    <td>4 Frame classes</td>
+                    <td>RestaurantDashboard, PesananFrame, LaporanFrame, ManajemenMenuFrame</td>
+                    <td>689</td>
+                </tr>
+            </tbody>
+        </table>
+        <p style="margin-top: 12px; font-size: 13px; color: var(--text-muted); text-align: right;">
+            <strong>Total: ~3.240 baris kode</strong> (tanpa komentar kosong)
+        </p>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SLIDE 14: CARA MENJALANKAN & TEKNOLOGI -->
+<!-- ============================================================ -->
+<div class="slide" id="slide-14">
+    <div class="bg-glow glow-green" style="bottom: -200px; left: -100px;"></div>
+    <div class="slide-number">14</div>
+
+    <div class="slide-tag">Teknologi &amp; Deployment</div>
+    <h2>Cara <span class="gradient-text-2">Menjalankan</span></h2>
+
+    <div class="two-col" style="margin-top: 24px;">
+        <div>
+            <div class="card" style="margin-bottom: 20px;">
+                <div class="card-label">Step 1 — Jalankan User App</div>
+                <div class="code-block" style="margin-top: 8px;">python user_app.py</div>
+                <div class="card-desc" style="margin-top: 8px;">Buka terminal, arahkan ke folder proyek, lalu jalankan command di atas. Register akun baru, lalu login.</div>
+            </div>
+
+            <div class="card" style="margin-bottom: 20px;">
+                <div class="card-label">Step 2 — Jalankan Restaurant App</div>
+                <div class="code-block" style="margin-top: 8px;">python restaurant_app.py</div>
+                <div class="card-desc" style="margin-top: 8px;">Buka terminal kedua (bersamaan), pilih restoran, dan kelola pesanan masuk.</div>
+            </div>
+
+            <div class="card" style="border-left: 3px solid var(--accent-orange);">
+                <div class="card-title" style="font-size: 14px;">💡 Tips Demo</div>
+                <div class="card-desc">
+                    Jalankan <strong>kedua aplikasi bersamaan</strong> untuk melihat real-time update. Saat kasir mengubah status pesanan, pelanggan akan melihat perubahan dalam 5 detik.
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <h3>Technology Stack</h3>
+            <div class="card-grid" style="grid-template-columns: 1fr; gap: 12px; margin-top: 12px;">
+                <div class="card" style="display: flex; align-items: center; gap: 16px; padding: 16px 20px;">
+                    <div style="font-size: 28px;">🐍</div>
+                    <div>
+                        <div class="card-title" style="font-size: 14px; margin-bottom: 2px;">Python 3.10+</div>
+                        <div class="card-desc">Bahasa pemrograman utama</div>
+                    </div>
+                </div>
+                <div class="card" style="display: flex; align-items: center; gap: 16px; padding: 16px 20px;">
+                    <div style="font-size: 28px;">🖼️</div>
+                    <div>
+                        <div class="card-title" style="font-size: 14px; margin-bottom: 2px;">Tkinter</div>
+                        <div class="card-desc">GUI framework (built-in Python)</div>
+                    </div>
+                </div>
+                <div class="card" style="display: flex; align-items: center; gap: 16px; padding: 16px 20px;">
+                    <div style="font-size: 28px;">💾</div>
+                    <div>
+                        <div class="card-title" style="font-size: 14px; margin-bottom: 2px;">SQLite3</div>
+                        <div class="card-desc">Embedded database (built-in Python)</div>
+                    </div>
+                </div>
+                <div class="card" style="display: flex; align-items: center; gap: 16px; padding: 16px 20px;">
+                    <div style="font-size: 28px;">📦</div>
+                    <div>
+                        <div class="card-title" style="font-size: 14px; margin-bottom: 2px;">Zero Dependencies</div>
+                        <div class="card-desc">Tidak ada library eksternal yang dibutuhkan!</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SLIDE 15: PENUTUP -->
+<!-- ============================================================ -->
+<div class="slide" id="slide-15">
+    <div class="bg-glow glow-purple" style="top: -200px; right: -200px;"></div>
+    <div class="bg-glow glow-green" style="bottom: -200px; left: -100px;"></div>
+    <div class="bg-glow glow-orange" style="top: 50%; left: 50%; transform: translate(-50%, -50%);"></div>
+    <div class="slide-number">15</div>
+
+    <div style="text-align: center;">
+        <div class="slide-tag">Kesimpulan</div>
+        <h1 style="font-size: 48px;">Terima Kasih 🙏</h1>
+        <p class="subtitle" style="max-width: 700px; margin: 16px auto 0;">
+            Proyek ini berhasil mengimplementasikan <strong>seluruh requirement PRD</strong> dan <strong>4 pilar OOP</strong> secara komprehensif dalam arsitektur multi-app yang saling terhubung secara real-time.
+        </p>
+
+        <div class="card-grid card-grid-4" style="margin-top: 40px;">
+            <div class="card" style="text-align: center;">
+                <div style="font-size: 36px; font-weight: 900; color: var(--accent-purple);">4</div>
+                <div class="card-desc">Pilar OOP Didemonstrasikan</div>
+            </div>
+            <div class="card" style="text-align: center;">
+                <div style="font-size: 36px; font-weight: 900; color: var(--accent-green);">2</div>
+                <div class="card-desc">Aplikasi Terpisah</div>
+            </div>
+            <div class="card" style="text-align: center;">
+                <div style="font-size: 36px; font-weight: 900; color: var(--accent-orange);">10+</div>
+                <div class="card-desc">Halaman UI</div>
+            </div>
+            <div class="card" style="text-align: center;">
+                <div style="font-size: 36px; font-weight: 900; color: var(--accent-cyan);">3.2K+</div>
+                <div class="card-desc">Baris Kode</div>
+            </div>
+        </div>
+
+        <p style="margin-top: 40px; font-size: 15px; color: var(--text-muted);">
+            Disusun oleh <strong style="color: var(--text-primary);">Zildjian Annesta</strong> &bull; UAS PBO 2026
+        </p>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- NAVIGATION BAR -->
+<!-- ============================================================ -->
+<div class="nav-bar">
+    <div class="slide-counter" id="slideCounter">Slide 1 / 15</div>
+    <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 12px; color: var(--text-muted);">Keyboard: ← → atau Spasi</span>
+    </div>
+    <div class="nav-buttons">
+        <button class="nav-btn" id="btnPrev" onclick="prevSlide()" disabled>← Sebelumnya</button>
+        <button class="nav-btn" id="btnNext" onclick="nextSlide()">Selanjutnya →</button>
+    </div>
+</div>
+
+<script>
+    const totalSlides = 15;
+    let currentSlide = 1;
+
+    function showSlide(n) {
+        document.querySelectorAll('.slide').forEach(s => s.classList.remove('active'));
+        document.getElementById(`slide-${n}`).classList.add('active');
+        currentSlide = n;
+
+        document.getElementById('slideCounter').textContent = `Slide ${n} / ${totalSlides}`;
+        document.getElementById('btnPrev').disabled = (n === 1);
+        document.getElementById('btnNext').disabled = (n === totalSlides);
+
+        const progress = (n / totalSlides) * 100;
+        document.getElementById('progressBar').style.width = `${progress}%`;
+    }
+
+    function nextSlide() {
+        if (currentSlide < totalSlides) showSlide(currentSlide + 1);
+    }
+
+    function prevSlide() {
+        if (currentSlide > 1) showSlide(currentSlide - 1);
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowRight' || e.key === ' ') {
+            e.preventDefault();
+            nextSlide();
+        }
+        if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            prevSlide();
+        }
+        if (e.key === 'Home') showSlide(1);
+        if (e.key === 'End') showSlide(totalSlides);
+    });
+
+    // Initialize
+    showSlide(1);
+</script>
+
+</body>
+</html>
