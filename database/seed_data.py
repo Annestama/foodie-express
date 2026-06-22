@@ -81,7 +81,7 @@ def seed():
         (3, "Croissant Butter",     22000, "makanan"),
         (3, "Roti Bakar Selai",     18000, "makanan"),
         (3, "Pisang Goreng Keju",   20000, "makanan"),
-        (3, "Nasi Goreng Kafe",     32000, "makanan"),
+        (3, "Nasi Goreng Kenangan",     32000, "makanan"),
     ]
 
     semua_menu = menu_padang + menu_sushi + menu_kopi
