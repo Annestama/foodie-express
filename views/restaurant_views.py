@@ -44,6 +44,7 @@ STATUS_COLORS = {
     "Diproses":            ACCENT_ORANGE,
     "Dikirim":             ACCENT_GREEN,
     "Pesanan Selesai":     "#6b7280",
+    "Dibatalkan":          ACCENT_RED,
 }
 
 def styled_button(parent, text, command, bg=ACCENT_ORANGE, fg=TEXT_WHITE,
@@ -123,8 +124,9 @@ class RestaurantDashboard(tk.Frame):
         self.frames["Pesanan"] = PesananFrame(self.content_area, self)
         self.frames["Laporan"] = LaporanFrame(self.content_area, self)
         self.frames["Menu"] = ManajemenMenuFrame(self.content_area, self)
+        self.frames["Pengaturan"] = PengaturanFrame(self.content_area, self)
 
-        for tab_name in ["Pesanan", "Laporan", "Menu"]:
+        for tab_name in ["Pesanan", "Laporan", "Menu", "Pengaturan"]:
             btn = tk.Button(tab_bar, text=tab_name, font=FONT_BOLD,
                             bg=BG_SIDEBAR, fg=TEXT_MUTED, relief="flat", bd=0,
                             cursor="hand2", padx=24, pady=12,
@@ -308,19 +310,49 @@ class PesananFrame(tk.Frame):
         for col, w in [("Menu", 30), ("Qty", 8), ("Subtotal", 15)]:
             tk.Label(header_row, text=col, font=FONT_BOLD, bg=BG_CARD2, fg=TEXT_MUTED, width=w, anchor="w").pack(side="left")
 
-        total = 0
+        total_sub = 0
         for item in pesanan.get('items', []):
             row = tk.Frame(table_frame, bg=BG_CARD, padx=16, pady=10)
             row.pack(fill="x", pady=(1, 0))
             tk.Label(row, text=item['nama_menu'], font=FONT_BODY, bg=BG_CARD, fg=TEXT_PRIMARY, width=30, anchor="w").pack(side="left")
             tk.Label(row, text=f"x{item['qty']}", font=FONT_BODY, bg=BG_CARD, fg=TEXT_MUTED, width=8, anchor="w").pack(side="left")
             tk.Label(row, text=f"Rp{item['subtotal']:,.0f}", font=FONT_BOLD, bg=BG_CARD, fg=ACCENT_GREEN, width=15, anchor="w").pack(side="left")
-            total += item['subtotal']
+            total_sub += item['subtotal']
+
+        pajak = pesanan.get('pajak_pesanan', 0.0)
+        layanan = pesanan.get('biaya_layanan_pesanan', 0.0)
+        grand_total = pesanan.get('total_harga', total_sub)
+        
+        if pajak > 0 or layanan > 0:
+            sub_row = tk.Frame(table_frame, bg=BG_CARD, padx=16, pady=4)
+            sub_row.pack(fill="x", pady=(4,0))
+            tk.Label(sub_row, text="Subtotal:", font=FONT_BODY, bg=BG_CARD, fg=TEXT_MUTED).pack(side="left")
+            tk.Label(sub_row, text=f"Rp{total_sub:,.0f}", font=FONT_BOLD, bg=BG_CARD, fg=TEXT_PRIMARY).pack(side="right")
+            
+            pajak_row = tk.Frame(table_frame, bg=BG_CARD, padx=16, pady=4)
+            pajak_row.pack(fill="x")
+            tk.Label(pajak_row, text="Pajak:", font=FONT_BODY, bg=BG_CARD, fg=TEXT_MUTED).pack(side="left")
+            tk.Label(pajak_row, text=f"Rp{pajak:,.0f}", font=FONT_BOLD, bg=BG_CARD, fg=TEXT_PRIMARY).pack(side="right")
+            
+            lyn_row = tk.Frame(table_frame, bg=BG_CARD, padx=16, pady=4)
+            lyn_row.pack(fill="x")
+            tk.Label(lyn_row, text="Biaya Layanan:", font=FONT_BODY, bg=BG_CARD, fg=TEXT_MUTED).pack(side="left")
+            tk.Label(lyn_row, text=f"Rp{layanan:,.0f}", font=FONT_BOLD, bg=BG_CARD, fg=TEXT_PRIMARY).pack(side="right")
 
         total_row = tk.Frame(table_frame, bg=BG_CARD2, padx=16, pady=12)
         total_row.pack(fill="x", pady=(4, 0))
         tk.Label(total_row, text="Grand Total:", font=FONT_HEADER, bg=BG_CARD2, fg=TEXT_MUTED).pack(side="left")
-        tk.Label(total_row, text=f"Rp{total:,.0f}", font=FONT_LARGE, bg=BG_CARD2, fg=ACCENT_GREEN).pack(side="right")
+        tk.Label(total_row, text=f"Rp{grand_total:,.0f}", font=FONT_LARGE, bg=BG_CARD2, fg=ACCENT_GREEN).pack(side="right")
+
+        pay_row = tk.Frame(table_frame, bg=BG_CARD, padx=16, pady=12)
+        pay_row.pack(fill="x", pady=(4, 0))
+        tk.Label(pay_row, text=f"Metode Pembayaran: {pesanan.get('metode_pembayaran', 'Cash')}", font=FONT_BOLD, bg=BG_CARD, fg=TEXT_PRIMARY).pack(side="left")
+        
+        nominal = pesanan.get('nominal_pembayaran')
+        if not nominal:
+            nominal = grand_total
+            
+        tk.Label(pay_row, text=f"Nominal Bayar: Rp{nominal:,.0f}", font=FONT_BOLD, bg=BG_CARD, fg=ACCENT_GREEN).pack(side="right")
 
         self._build_status_panel(scrollable_frame, pesanan, status, status_color)
         
@@ -347,29 +379,45 @@ class PesananFrame(tk.Frame):
             ("[3] Kirim Pesanan","Dikirim",       ACCENT_GREEN),
         ]
 
-        for btn_text, target_status, btn_color in btn_configs:
-            try:
-                target_idx = STATUS_FLOW.index(target_status)
-            except ValueError:
-                continue
+        if status == "Dibatalkan":
+            tk.Label(mgmt_frame, text="Pesanan ini telah dibatalkan", font=FONT_BODY, bg=BG_CARD, fg=ACCENT_RED).pack(pady=(8, 0))
+            if pesanan.get('alasan_pembatalan'):
+                tk.Label(mgmt_frame, text=f"Alasan: {pesanan['alasan_pembatalan']}", font=FONT_BODY, bg=BG_CARD, fg=TEXT_MUTED, wraplength=250, justify="center").pack(pady=(4, 0))
+        else:
+            for btn_text, target_status, btn_color in btn_configs:
+                try:
+                    target_idx = STATUS_FLOW.index(target_status)
+                except ValueError:
+                    continue
 
-            is_next = (target_idx == current_idx + 1)
-            is_done = (target_idx <= current_idx)
+                is_next = (target_idx == current_idx + 1)
+                is_done = (target_idx <= current_idx)
 
-            if is_done:
-                btn_bg, btn_fg, btn_txt, btn_state = "#374151", TEXT_MUTED, f"✓  {target_status} (Selesai)", "disabled"
-            elif is_next:
-                btn_bg, btn_fg, btn_txt, btn_state = btn_color, (BG_DARK if btn_color == ACCENT_GREEN else TEXT_WHITE), btn_text, "normal"
-            else:
-                btn_bg, btn_fg, btn_txt, btn_state = "#252540", TEXT_MUTED, btn_text, "disabled"
+                if is_done:
+                    btn_bg, btn_fg, btn_txt, btn_state = "#374151", TEXT_MUTED, f"✓  {target_status} (Selesai)", "disabled"
+                elif is_next:
+                    btn_bg, btn_fg, btn_txt, btn_state = btn_color, (BG_DARK if btn_color == ACCENT_GREEN else TEXT_WHITE), btn_text, "normal"
+                else:
+                    btn_bg, btn_fg, btn_txt, btn_state = "#252540", TEXT_MUTED, btn_text, "disabled"
 
-            btn = tk.Button(mgmt_frame, text=btn_txt, command=lambda pid=pesanan['id'], ts=target_status: self.update_status(pid, ts),
-                            bg=btn_bg, fg=btn_fg, font=FONT_BOLD, relief="flat", bd=0, padx=20, pady=10, state=btn_state,
-                            cursor="hand2" if btn_state == "normal" else "arrow", activebackground=btn_color, activeforeground=TEXT_WHITE)
-            btn.pack(fill="x", pady=(0, 8))
+                btn = tk.Button(mgmt_frame, text=btn_txt, command=lambda pid=pesanan['id'], ts=target_status: self.update_status(pid, ts),
+                                bg=btn_bg, fg=btn_fg, font=FONT_BOLD, relief="flat", bd=0, padx=20, pady=10, state=btn_state,
+                                cursor="hand2" if btn_state == "normal" else "arrow", activebackground=btn_color, activeforeground=TEXT_WHITE)
+                btn.pack(fill="x", pady=(0, 8))
 
-        if current_idx >= len(STATUS_FLOW) - 1:
-            tk.Label(mgmt_frame, text="Pesanan ini telah selesai sepenuhnya", font=FONT_BODY, bg=BG_CARD, fg=ACCENT_GREEN).pack(pady=(8, 0))
+            if current_idx >= len(STATUS_FLOW) - 1:
+                tk.Label(mgmt_frame, text="Pesanan ini telah selesai sepenuhnya", font=FONT_BODY, bg=BG_CARD, fg=ACCENT_GREEN).pack(pady=(8, 0))
+            elif current_idx < len(STATUS_FLOW) - 1:
+                def on_batal_click(pid=pesanan['id']):
+                    from tkinter import simpledialog
+                    alasan = simpledialog.askstring("Alasan Pembatalan", "Masukkan alasan pembatalan:")
+                    if alasan is not None:
+                        self.update_status(pid, "Dibatalkan", alasan)
+                        
+                btn_batal = tk.Button(mgmt_frame, text="Batalkan Pesanan", command=on_batal_click,
+                                    bg=ACCENT_RED, fg=TEXT_WHITE, font=FONT_BOLD, relief="flat", bd=0, padx=20, pady=10,
+                                    cursor="hand2", activebackground="#a33636", activeforeground=TEXT_WHITE)
+                btn_batal.pack(fill="x", pady=(8, 0))
 
     def muat_pesanan(self, force=False):
         filter_status = self.filter_var.get() if hasattr(self, 'filter_var') else "Semua"
@@ -446,7 +494,7 @@ class PesananFrame(tk.Frame):
         self.selected_pesanan = pesanan
         self._build_right_panel_detail(pesanan)
 
-    def update_status(self, pesanan_id: int, status_baru: str):
+    def update_status(self, pesanan_id: int, status_baru: str, alasan_pembatalan: str = None):
         pesanan_data = self.db.get_pesanan_by_id(pesanan_id)
         if not pesanan_data: return
 
@@ -458,7 +506,7 @@ class PesananFrame(tk.Frame):
         )
 
         if obj_pesanan.set_status(status_baru):
-            self.db.update_status_pesanan(pesanan_id, status_baru)
+            self.db.update_status_pesanan(pesanan_id, status_baru, alasan_pembatalan)
             messagebox.showinfo("Status Diperbarui", f"Status pesanan #{pesanan_id} diubah menjadi:\n{status_baru}")
             self.muat_pesanan(force=True)
         else:
@@ -724,3 +772,66 @@ class ManajemenMenuFrame(tk.Frame):
 
         # Refresh
         self.on_show()
+
+# ============================================================
+# FRAME 4: PENGATURAN
+# ============================================================
+class PengaturanFrame(tk.Frame):
+    def __init__(self, parent, dashboard):
+        super().__init__(parent, bg=BG_DARK)
+        self.dashboard = dashboard
+        self.db = dashboard.db
+        self._build_ui()
+
+    def on_show(self):
+        self._load_data()
+
+    def _build_ui(self):
+        container = tk.Frame(self, bg=BG_DARK, padx=40, pady=40)
+        container.pack(fill="both", expand=True)
+
+        header = tk.Frame(container, bg=BG_DARK)
+        header.pack(fill="x", pady=(0, 20))
+        tk.Label(header, text="⚙ Pengaturan Restoran", font=FONT_TITLE, bg=BG_DARK, fg=TEXT_PRIMARY).pack(side="left")
+        
+        form_bg = tk.Frame(container, bg=BG_CARD, padx=40, pady=40)
+        form_bg.pack(fill="x")
+        
+        tk.Label(form_bg, text="Pajak (%)", font=FONT_BOLD, bg=BG_CARD, fg=TEXT_MUTED).pack(anchor="w")
+        self.entry_pajak = tk.Entry(form_bg, font=FONT_BODY, bg=INPUT_BG, fg=TEXT_PRIMARY, relief="flat", bd=0, highlightthickness=1, highlightbackground=BORDER_COLOR)
+        self.entry_pajak.pack(fill="x", pady=(5, 20), ipady=8)
+        
+        tk.Label(form_bg, text="Biaya Layanan (%)", font=FONT_BOLD, bg=BG_CARD, fg=TEXT_MUTED).pack(anchor="w")
+        self.entry_layanan = tk.Entry(form_bg, font=FONT_BODY, bg=INPUT_BG, fg=TEXT_PRIMARY, relief="flat", bd=0, highlightthickness=1, highlightbackground=BORDER_COLOR)
+        self.entry_layanan.pack(fill="x", pady=(5, 20), ipady=8)
+
+        styled_button(form_bg, "Simpan Pengaturan", command=self._simpan, bg=ACCENT_GREEN, fg=TEXT_WHITE).pack(anchor="w", pady=(10, 0))
+
+    def _load_data(self):
+        restoran_id = self.dashboard.restoran['id']
+        restoran_data = self.db.get_restoran_by_id(restoran_id)
+        if restoran_data:
+            self.dashboard.restoran = restoran_data  # Update cache
+            self.entry_pajak.delete(0, "end")
+            self.entry_pajak.insert(0, str(restoran_data.get('pajak', 0.0)))
+            self.entry_layanan.delete(0, "end")
+            self.entry_layanan.insert(0, str(restoran_data.get('biaya_layanan', 0.0)))
+
+    def _simpan(self):
+        try:
+            pajak = float(self.entry_pajak.get())
+            layanan = float(self.entry_layanan.get())
+        except ValueError:
+            messagebox.showerror("Error", "Nilai harus berupa angka (desimal)!")
+            return
+            
+        if pajak < 0 or layanan < 0:
+            messagebox.showerror("Error", "Nilai tidak boleh negatif!")
+            return
+
+        restoran_id = self.dashboard.restoran['id']
+        if self.db.update_pengaturan_restoran(restoran_id, pajak, layanan):
+            messagebox.showinfo("Sukses", "Pengaturan restoran berhasil disimpan!")
+            self._load_data()
+        else:
+            messagebox.showerror("Gagal", "Gagal menyimpan pengaturan.")

@@ -54,9 +54,17 @@ class DatabaseManager:
                 id      INTEGER PRIMARY KEY AUTOINCREMENT,
                 nama    TEXT NOT NULL,
                 deskripsi TEXT DEFAULT '',
-                aktif   INTEGER DEFAULT 1
+                aktif   INTEGER DEFAULT 1,
+                pajak   REAL DEFAULT 0.0,
+                biaya_layanan REAL DEFAULT 0.0
             )
         """)
+        
+        try:
+            cursor.execute("ALTER TABLE restoran ADD COLUMN pajak REAL DEFAULT 0.0")
+            cursor.execute("ALTER TABLE restoran ADD COLUMN biaya_layanan REAL DEFAULT 0.0")
+        except sqlite3.OperationalError:
+            pass
 
         # Tabel menu
         cursor.execute("""
@@ -79,13 +87,35 @@ class DatabaseManager:
                 waktu           TEXT NOT NULL,
                 status          TEXT NOT NULL DEFAULT 'Menunggu Konfirmasi',
                 total_harga     REAL NOT NULL DEFAULT 0,
+                metode_pembayaran TEXT DEFAULT 'Cash',
+                nominal_pembayaran REAL DEFAULT 0,
+                pajak_pesanan REAL DEFAULT 0.0,
+                biaya_layanan_pesanan REAL DEFAULT 0.0,
                 waktu_dikonfirmasi TEXT,
                 waktu_diproses     TEXT,
                 waktu_dikirim      TEXT,
                 waktu_selesai      TEXT,
+                alasan_pembatalan  TEXT,
                 FOREIGN KEY (restoran_id) REFERENCES restoran(id)
             )
         """)
+        
+        try:
+            cursor.execute("ALTER TABLE pesanan ADD COLUMN metode_pembayaran TEXT DEFAULT 'Cash'")
+            cursor.execute("ALTER TABLE pesanan ADD COLUMN nominal_pembayaran REAL DEFAULT 0")
+        except sqlite3.OperationalError:
+            pass
+            
+        try:
+            cursor.execute("ALTER TABLE pesanan ADD COLUMN pajak_pesanan REAL DEFAULT 0.0")
+            cursor.execute("ALTER TABLE pesanan ADD COLUMN biaya_layanan_pesanan REAL DEFAULT 0.0")
+        except sqlite3.OperationalError:
+            pass
+            
+        try:
+            cursor.execute("ALTER TABLE pesanan ADD COLUMN alasan_pembatalan TEXT")
+        except sqlite3.OperationalError:
+            pass
 
         # Tabel detail pesanan (line items)
         cursor.execute("""
@@ -133,6 +163,19 @@ class DatabaseManager:
         row = cursor.fetchone()
         conn.close()
         return dict(row) if row else None
+
+    def update_pengaturan_restoran(self, restoran_id: int, pajak: float, biaya_layanan: float) -> bool:
+        """Update pajak dan biaya layanan restoran."""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "UPDATE restoran SET pajak = ?, biaya_layanan = ? WHERE id = ?",
+            (pajak, biaya_layanan, restoran_id)
+        )
+        affected = cursor.rowcount
+        conn.commit()
+        conn.close()
+        return affected > 0
 
     # =========================================================================
     # MENU OPERATIONS
@@ -242,7 +285,7 @@ class DatabaseManager:
     # PESANAN OPERATIONS
     # =========================================================================
 
-    def buat_pesanan(self, restoran_id: int, nama_pemesan: str, items: list[dict]) -> int:
+    def buat_pesanan(self, restoran_id: int, nama_pemesan: str, items: list[dict], metode_pembayaran: str = 'Cash', nominal_pembayaran: float = 0.0) -> int:
         """
         Membuat pesanan baru ke database.
 
@@ -250,6 +293,8 @@ class DatabaseManager:
             restoran_id: ID restoran tujuan
             nama_pemesan: Nama pelanggan
             items: List dict berisi {menu_id, nama, qty, subtotal}
+            metode_pembayaran: Metode pembayaran yang dipilih
+            nominal_pembayaran: Nominal uang yang dibayarkan
 
         Returns:
             ID pesanan yang baru dibuat
@@ -257,14 +302,24 @@ class DatabaseManager:
         conn = self._get_connection()
         cursor = conn.cursor()
 
-        total_harga = sum(item['subtotal'] for item in items)
+        # Ambil pengaturan pajak & layanan
+        cursor.execute("SELECT pajak, biaya_layanan FROM restoran WHERE id = ?", (restoran_id,))
+        row = cursor.fetchone()
+        pct_pajak = row['pajak'] if row and row['pajak'] else 0.0
+        pct_layanan = row['biaya_layanan'] if row and row['biaya_layanan'] else 0.0
+
+        subtotal = sum(item['subtotal'] for item in items)
+        nominal_pajak = subtotal * (pct_pajak / 100.0)
+        nominal_layanan = subtotal * (pct_layanan / 100.0)
+        total_harga = subtotal + nominal_pajak + nominal_layanan
+
         waktu = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         # Insert header pesanan
         cursor.execute(
-            """INSERT INTO pesanan (restoran_id, nama_pemesan, waktu, status, total_harga)
-               VALUES (?, ?, ?, 'Menunggu Konfirmasi', ?)""",
-            (restoran_id, nama_pemesan, waktu, total_harga)
+            """INSERT INTO pesanan (restoran_id, nama_pemesan, waktu, status, total_harga, metode_pembayaran, nominal_pembayaran, pajak_pesanan, biaya_layanan_pesanan)
+               VALUES (?, ?, ?, 'Menunggu Konfirmasi', ?, ?, ?, ?, ?)""",
+            (restoran_id, nama_pemesan, waktu, total_harga, metode_pembayaran, nominal_pembayaran, nominal_pajak, nominal_layanan)
         )
         pesanan_id = cursor.lastrowid
 
@@ -382,20 +437,21 @@ class DatabaseManager:
         conn.close()
         return pesanan_list
 
-    def update_status_pesanan(self, pesanan_id: int, status_baru: str) -> bool:
+    def update_status_pesanan(self, pesanan_id: int, status_baru: str, alasan_pembatalan: str = None) -> bool:
         """
         Mengupdate status pesanan di database.
 
         Args:
             pesanan_id: ID pesanan yang akan diupdate
             status_baru: Status baru yang valid
+            alasan_pembatalan: Opsional, diisi jika status Dibatalkan
 
         Returns:
             True jika berhasil diupdate
         """
         status_valid = [
             "Menunggu Konfirmasi", "Dikonfirmasi",
-            "Diproses", "Dikirim", "Pesanan Selesai"
+            "Diproses", "Dikirim", "Pesanan Selesai", "Dibatalkan"
         ]
         if status_baru not in status_valid:
             return False
@@ -415,7 +471,12 @@ class DatabaseManager:
         conn = self._get_connection()
         cursor = conn.cursor()
         
-        if col_to_update:
+        if status_baru == "Dibatalkan":
+            cursor.execute(
+                "UPDATE pesanan SET status = ?, alasan_pembatalan = ? WHERE id = ?",
+                (status_baru, alasan_pembatalan, pesanan_id)
+            )
+        elif col_to_update:
             cursor.execute(
                 f"UPDATE pesanan SET status = ?, {col_to_update} = ? WHERE id = ?",
                 (status_baru, now, pesanan_id)

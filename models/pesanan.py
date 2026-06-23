@@ -30,7 +30,9 @@ class Pesanan:
 
     def __init__(self, id: int, nama_pemesan: str, restoran_id: int,
                  items: list, total_harga: float, status: str = "Menunggu Konfirmasi",
-                 waktu: str = None, restoran_nama: str = ""):
+                 waktu: str = None, restoran_nama: str = "", 
+                 metode_pembayaran: str = "Cash", nominal_pembayaran: float = 0.0,
+                 pajak_pesanan: float = 0.0, biaya_layanan_pesanan: float = 0.0):
         # Atribut public
         self.id = id
         self.nama_pemesan = nama_pemesan
@@ -42,6 +44,10 @@ class Pesanan:
         # Atribut PRIVATE (Enkapsulasi) — dilindungi dari akses langsung luar class
         self.__total_harga = total_harga
         self.__status_pengiriman = status
+        self.__metode_pembayaran = metode_pembayaran
+        self.__nominal_pembayaran = nominal_pembayaran
+        self.__pajak_pesanan = pajak_pesanan
+        self.__biaya_layanan_pesanan = biaya_layanan_pesanan
 
     # ===== GETTER METHODS =====
     def get_total(self) -> float:
@@ -72,6 +78,12 @@ class Pesanan:
             True  — jika status berhasil diubah
             False — jika perubahan tidak valid
         """
+        if new_status == "Dibatalkan":
+            if self.__status_pengiriman in ["Menunggu Konfirmasi", "Dikonfirmasi", "Diproses"]:
+                self.__status_pengiriman = new_status
+                return True
+            return False
+
         if new_status not in self.STATUS_FLOW:
             return False
 
@@ -126,6 +138,10 @@ class Pesanan:
             'items': self.items,
             'total_harga': self.__total_harga,
             'status': self.__status_pengiriman,
+            'metode_pembayaran': self.__metode_pembayaran,
+            'nominal_pembayaran': self.__nominal_pembayaran,
+            'pajak_pesanan': self.__pajak_pesanan,
+            'biaya_layanan_pesanan': self.__biaya_layanan_pesanan,
             'waktu': self.waktu
         }
 

@@ -49,6 +49,7 @@ STATUS_COLORS = {
     "Diproses":            ACCENT_PURPLE,
     "Dikirim":             SUCCESS_COLOR,
     "Pesanan Selesai":     "#6b7280",
+    "Dibatalkan":          DANGER_COLOR,
 }
 
 
@@ -671,11 +672,43 @@ class KeranjangFrame(tk.Frame):
                 self._buat_item_row(sf, item, scroll_cb)
 
         # GRAND TOTAL
+        restoran_data = self.db.get_restoran_by_id(self.controller.current_restoran_id)
+        pct_pajak = restoran_data.get('pajak', 0.0) if restoran_data else 0.0
+        pct_layanan = restoran_data.get('biaya_layanan', 0.0) if restoran_data else 0.0
+        
+        subtotal = sum(item['subtotal'] for item in keranjang.get_items())
+        nom_pajak = subtotal * (pct_pajak / 100.0)
+        nom_layanan = subtotal * (pct_layanan / 100.0)
+        grand_total = subtotal + nom_pajak + nom_layanan
+
         tf = tk.Frame(self, bg=BG_CARD, padx=40, pady=14)
         tf.pack(fill="x")
-        tk.Label(tf, text="Grand Total:", font=FONT_HEADER, bg=BG_CARD, fg=TEXT_MUTED).pack(side="left")
-        tk.Label(tf, text=keranjang.format_grand_total(),
-                 font=FONT_LARGE, bg=BG_CARD, fg=ACCENT_GREEN).pack(side="right")
+        
+        if pct_pajak > 0 or pct_layanan > 0:
+            sub_frame = tk.Frame(tf, bg=BG_CARD)
+            sub_frame.pack(fill="x", pady=(0, 10))
+            
+            tk.Label(sub_frame, text="Subtotal:", font=FONT_BODY, bg=BG_CARD, fg=TEXT_MUTED).pack(side="left")
+            tk.Label(sub_frame, text=f"Rp{subtotal:,.0f}", font=FONT_BOLD, bg=BG_CARD, fg=TEXT_PRIMARY).pack(side="right")
+            
+            if pct_pajak > 0:
+                p_row = tk.Frame(tf, bg=BG_CARD)
+                p_row.pack(fill="x")
+                tk.Label(p_row, text=f"Pajak ({pct_pajak}%):", font=FONT_BODY, bg=BG_CARD, fg=TEXT_MUTED).pack(side="left")
+                tk.Label(p_row, text=f"Rp{nom_pajak:,.0f}", font=FONT_BOLD, bg=BG_CARD, fg=TEXT_PRIMARY).pack(side="right")
+                
+            if pct_layanan > 0:
+                l_row = tk.Frame(tf, bg=BG_CARD)
+                l_row.pack(fill="x")
+                tk.Label(l_row, text=f"Biaya Layanan ({pct_layanan}%):", font=FONT_BODY, bg=BG_CARD, fg=TEXT_MUTED).pack(side="left")
+                tk.Label(l_row, text=f"Rp{nom_layanan:,.0f}", font=FONT_BOLD, bg=BG_CARD, fg=TEXT_PRIMARY).pack(side="right")
+                
+            tk.Frame(tf, bg=BORDER_COLOR, height=1).pack(fill="x", pady=(10, 10))
+
+        tot_row = tk.Frame(tf, bg=BG_CARD)
+        tot_row.pack(fill="x")
+        tk.Label(tot_row, text="Grand Total:", font=FONT_HEADER, bg=BG_CARD, fg=TEXT_MUTED).pack(side="left")
+        tk.Label(tot_row, text=f"Rp{grand_total:,.0f}", font=FONT_LARGE, bg=BG_CARD, fg=ACCENT_GREEN).pack(side="right")
 
     def _buat_item_row(self, parent, item, scroll_cb):
         row = tk.Frame(parent, bg=BG_CARD, padx=16, pady=10)
@@ -725,13 +758,191 @@ class KeranjangFrame(tk.Frame):
         if self.controller.keranjang.is_kosong():
             messagebox.showwarning("Kosong", "Keranjang masih kosong!")
             return
+            
+        restoran_data = self.db.get_restoran_by_id(self.controller.current_restoran_id)
+        pct_pajak = restoran_data.get('pajak', 0.0) if restoran_data else 0.0
+        pct_layanan = restoran_data.get('biaya_layanan', 0.0) if restoran_data else 0.0
+        
+        subtotal = sum(item['subtotal'] for item in self.controller.keranjang.get_items())
+        nom_pajak = subtotal * (pct_pajak / 100.0)
+        nom_layanan = subtotal * (pct_layanan / 100.0)
+        grand_total = subtotal + nom_pajak + nom_layanan
+            
+        self.show_payment_simulation(grand_total)
+
+    def show_payment_simulation(self, total_belanja):
+        
+        top = tk.Toplevel(self)
+        top.title("Simulasi Pembayaran")
+        top.geometry("450x550")
+        top.configure(bg=BG_CARD)
+        top.transient(self.winfo_toplevel())
+        top.grab_set()
+        
+        # Center the window
+        top.update_idletasks()
+        x = top.winfo_toplevel().winfo_x() + (top.winfo_toplevel().winfo_width() // 2) - (450 // 2)
+        y = top.winfo_toplevel().winfo_y() + (top.winfo_toplevel().winfo_height() // 2) - (550 // 2)
+        top.geometry(f"+{x}+{y}")
+
+        tk.Label(top, text="Simulasi Pembayaran", font=FONT_TITLE, bg=BG_CARD, fg=TEXT_PRIMARY).pack(pady=(20, 10))
+        tk.Label(top, text=f"Total Tagihan: Rp{total_belanja:,.0f}", font=FONT_LARGE, bg=BG_CARD, fg=ACCENT_GREEN).pack(pady=(0, 20))
+
+        tk.Label(top, text="Pilih Metode Pembayaran:", font=FONT_BOLD, bg=BG_CARD, fg=TEXT_MUTED).pack(anchor="w", padx=30)
+        
+        metode_var = tk.StringVar(value="Transfer Bank (VA)")
+        metode_opts = ["Transfer Bank (VA)", "QRIS / QR Code", "E-Wallet (OVO/GoPay/Dana)", "Kartu Kredit", "Cash"]
+        combo = ttk.Combobox(top, textvariable=metode_var, values=metode_opts, state="readonly", font=FONT_BODY)
+        combo.pack(fill="x", padx=30, pady=(5, 15), ipady=5)
+
+        # Dynamic Frame for Payment Details
+        dynamic_frame = tk.Frame(top, bg=BG_CARD)
+        dynamic_frame.pack(fill="both", expand=True, padx=30, pady=5)
+        
+        nominal_var = tk.StringVar(value=str(int(total_belanja)))
+        
+        def update_dynamic_ui(event=None):
+            for w in dynamic_frame.winfo_children():
+                w.destroy()
+                
+            metode = metode_var.get()
+            
+            if metode == "Cash":
+                tk.Label(dynamic_frame, text="Masukkan Nominal Pembayaran (Rp):", font=FONT_BOLD, bg=BG_CARD, fg=TEXT_MUTED).pack(anchor="w")
+                entry_nominal = tk.Entry(dynamic_frame, textvariable=nominal_var, font=FONT_BODY, bg=INPUT_BG, fg=TEXT_PRIMARY, relief="flat", bd=0, highlightthickness=1, highlightbackground=BORDER_COLOR)
+                entry_nominal.pack(fill="x", pady=(5, 20), ipady=8)
+                
+                styled_button(dynamic_frame, "Bayar Sekarang", command=lambda: proses_bayar(metode), bg=SUCCESS_COLOR, fg=TEXT_WHITE).pack(fill="x", pady=10)
+            elif metode == "Transfer Bank (VA)":
+                import random
+                va_number = "".join([str(random.randint(0, 9)) for _ in range(12)])
+                tk.Label(dynamic_frame, text="Nomor Virtual Account Anda:", font=FONT_BOLD, bg=BG_CARD, fg=TEXT_MUTED).pack(anchor="w")
+                tk.Label(dynamic_frame, text=va_number, font=("Segoe UI", 20, "bold"), bg=BG_CARD, fg=TEXT_PRIMARY).pack(pady=(10, 20))
+                
+                styled_button(dynamic_frame, "Saya Sudah Bayar", command=lambda: proses_bayar(metode), bg=SUCCESS_COLOR, fg=TEXT_WHITE).pack(fill="x", pady=10)
+            elif metode == "QRIS / QR Code":
+                tk.Label(dynamic_frame, text="Scan QR Code Berikut:", font=FONT_BOLD, bg=BG_CARD, fg=TEXT_MUTED).pack(anchor="w")
+                
+                qr_frame = tk.Frame(dynamic_frame, bg=BG_CARD)
+                qr_frame.pack(pady=(10, 20))
+                qr_canvas = tk.Canvas(qr_frame, width=150, height=150, bg="white", bd=0, highlightthickness=0)
+                qr_canvas.pack()
+                
+                import random
+                cell_size = 10
+                for r in range(15):
+                    for c in range(15):
+                        color = "black" if random.random() > 0.5 else "white"
+                        # Top-left locator
+                        if r < 5 and c < 5:
+                            if r==0 or r==4 or c==0 or c==4 or (2<=r<=3 and 2<=c<=3): color = "black"
+                            else: color = "white"
+                        # Top-right locator
+                        elif r < 5 and c > 9:
+                            if r==0 or r==4 or c==10 or c==14 or (2<=r<=3 and 11<=c<=12): color = "black"
+                            else: color = "white"
+                        # Bottom-left locator
+                        elif r > 9 and c < 5:
+                            if r==10 or r==14 or c==0 or c==4 or (12<=r<=13 and 2<=c<=3): color = "black"
+                            else: color = "white"
+
+                        if color == "black":
+                            qr_canvas.create_rectangle(c*cell_size, r*cell_size, (c+1)*cell_size, (r+1)*cell_size, fill="black", outline="black")
+                
+                styled_button(dynamic_frame, "Saya Sudah Bayar", command=lambda: proses_bayar(metode), bg=SUCCESS_COLOR, fg=TEXT_WHITE).pack(fill="x", pady=10)
+            elif metode == "E-Wallet (OVO/GoPay/Dana)":
+                tk.Label(dynamic_frame, text="Buka aplikasi E-Wallet Anda untuk mengonfirmasi", font=FONT_BOLD, bg=BG_CARD, fg=TEXT_MUTED).pack(anchor="w", pady=(10, 20))
+                
+                styled_button(dynamic_frame, "Saya Sudah Bayar", command=lambda: proses_bayar(metode), bg=SUCCESS_COLOR, fg=TEXT_WHITE).pack(fill="x", pady=10)
+            elif metode == "Kartu Kredit":
+                tk.Label(dynamic_frame, text="Nomor Kartu:", font=FONT_BOLD, bg=BG_CARD, fg=TEXT_MUTED).pack(anchor="w")
+                tk.Entry(dynamic_frame, font=FONT_BODY, bg=INPUT_BG, fg=TEXT_PRIMARY, relief="flat", bd=0, highlightthickness=1, highlightbackground=BORDER_COLOR).pack(fill="x", pady=(5, 10), ipady=5)
+                
+                styled_button(dynamic_frame, "Bayar Sekarang", command=lambda: proses_bayar(metode), bg=SUCCESS_COLOR, fg=TEXT_WHITE).pack(fill="x", pady=10)
+
+        combo.bind("<<ComboboxSelected>>", update_dynamic_ui)
+
+        def proses_bayar(metode):
+            if metode == "Cash":
+                try:
+                    nominal = float(nominal_var.get())
+                except ValueError:
+                    messagebox.showerror("Error", "Nominal harus berupa angka!", parent=top)
+                    return
+                    
+                if nominal < total_belanja:
+                    messagebox.showerror("Uang Kurang", f"Nominal pembayaran kurang!\nTotal tagihan: Rp{total_belanja:,.0f}", parent=top)
+                    return
+            else:
+                nominal = total_belanja
+                
+            kembalian = nominal - total_belanja
+            
+            if kembalian > 0:
+                messagebox.showinfo("Pembayaran Berhasil", f"Pembayaran sukses menggunakan {metode}!\nKembalian Anda: Rp{kembalian:,.0f}", parent=top)
+            else:
+                messagebox.showinfo("Pembayaran Berhasil", f"Pembayaran sukses menggunakan {metode}!", parent=top)
+                
+            top.destroy()
+            self.tampilkan_konfirmasi_pembatalan(metode, nominal)
+
+        styled_button(top, "Batal", command=top.destroy, bg=DANGER_COLOR, fg=TEXT_WHITE).pack(fill="x", padx=30, side="bottom", pady=(0, 20))
+
+        # Initialize the first view
+        update_dynamic_ui()
+
+    def tampilkan_konfirmasi_pembatalan(self, metode_pembayaran, nominal_pembayaran):
+        top = tk.Toplevel(self)
+        top.title("Pengecekan Pesanan")
+        top.geometry("450x350")
+        top.configure(bg=BG_CARD)
+        top.transient(self.winfo_toplevel())
+        top.grab_set()
+
+        top.update_idletasks()
+        x = top.winfo_toplevel().winfo_x() + (top.winfo_toplevel().winfo_width() // 2) - (450 // 2)
+        y = top.winfo_toplevel().winfo_y() + (top.winfo_toplevel().winfo_height() // 2) - (350 // 2)
+        top.geometry(f"450x350+{x}+{y}")
+
+        tk.Label(top, text="Menyiapkan Pesanan...", font=FONT_TITLE, bg=BG_CARD, fg=TEXT_PRIMARY).pack(pady=(25, 10))
+        tk.Label(top, text="Pesanan sedang diproses. Anda dapat membatalkan pesanan sebelum diteruskan secara otomatis ke restoran.", font=FONT_BODY, bg=BG_CARD, fg=TEXT_MUTED, wraplength=380, justify="center").pack(pady=(0, 15))
+
+        lbl_timer = tk.Label(top, text="15", font=("Segoe UI", 48, "bold"), bg=BG_CARD, fg=WARNING_COLOR)
+        lbl_timer.pack(pady=(0, 20))
+
+        waktu_sisa = 15
+        timer_id = None
+
+        def tick():
+            nonlocal waktu_sisa, timer_id
+            waktu_sisa -= 1
+            if waktu_sisa <= 0:
+                top.destroy()
+                self.proses_checkout(metode_pembayaran, nominal_pembayaran)
+            else:
+                lbl_timer.config(text=str(waktu_sisa))
+                timer_id = top.after(1000, tick)
+
+        def batalkan():
+            if timer_id is not None:
+                top.after_cancel(timer_id)
+            top.destroy()
+            messagebox.showinfo("Dibatalkan", "Pesanan berhasil dibatalkan. Anda tidak jadi memesan.", parent=self.winfo_toplevel())
+
+        styled_button(top, "Batalkan Pesanan", command=batalkan, bg=DANGER_COLOR, fg=TEXT_WHITE).pack(fill="x", padx=40)
+
+        timer_id = top.after(1000, tick)
+
+    def proses_checkout(self, metode_pembayaran, nominal_pembayaran):
         nama = self.controller.pelanggan.nama
 
         items = self.controller.keranjang.get_items()
         pesanan_id = self.db.buat_pesanan(
             restoran_id=self.controller.current_restoran_id,
             nama_pemesan=nama,
-            items=items
+            items=items,
+            metode_pembayaran=metode_pembayaran,
+            nominal_pembayaran=nominal_pembayaran
         )
         self.controller.keranjang.kosongkan()
         # Simpan nama pemesan ke controller untuk query riwayat
@@ -760,6 +971,7 @@ class RiwayatFrame(tk.Frame):
         "Diproses":            "Sedang Dimasak",
         "Dikirim":             "Sedang Dikirim",
         "Pesanan Selesai":     "Selesai",
+        "Dibatalkan":          "Dibatalkan",
     }
 
     def __init__(self, parent, controller):
@@ -943,6 +1155,10 @@ class RiwayatFrame(tk.Frame):
         elif status == "Pesanan Selesai":
             tk.Label(row3, text="Pesanan telah selesai",
                      font=FONT_SMALL, bg=BG_CARD, fg="#6b7280").pack(side="right")
+        elif status == "Dibatalkan":
+            alasan = pesanan.get('alasan_pembatalan', '')
+            text_alasan = f"Dibatalkan - Alasan: {alasan}" if alasan else "Pesanan Dibatalkan"
+            tk.Label(row3, text=text_alasan, font=FONT_SMALL, bg=BG_CARD, fg=DANGER_COLOR).pack(side="right")
         else:
             tk.Label(row3,
                      text=f"Menunggu restoran update status...",
@@ -975,12 +1191,43 @@ class RiwayatFrame(tk.Frame):
                          bg=BG_CARD3, fg=ACCENT_GREEN, width=14, anchor="w").pack(side="left")
 
             tk.Frame(detail, bg=BORDER_COLOR, height=1).pack(fill="x", pady=(12, 4))
+            
+            pajak = pesanan.get('pajak_pesanan', 0.0)
+            layanan = pesanan.get('biaya_layanan_pesanan', 0.0)
+            grand_total = pesanan.get('total_harga', total)
+            
+            if pajak > 0 or layanan > 0:
+                sub_row = tk.Frame(detail, bg=BG_CARD3)
+                sub_row.pack(fill="x")
+                tk.Label(sub_row, text="Subtotal:", font=FONT_BODY, bg=BG_CARD3, fg=TEXT_MUTED).pack(side="left")
+                tk.Label(sub_row, text=f"Rp{total:,.0f}", font=FONT_BOLD, bg=BG_CARD3, fg=TEXT_PRIMARY).pack(side="right")
+                
+                if pajak > 0:
+                    pajak_row = tk.Frame(detail, bg=BG_CARD3)
+                    pajak_row.pack(fill="x")
+                    tk.Label(pajak_row, text="Pajak:", font=FONT_BODY, bg=BG_CARD3, fg=TEXT_MUTED).pack(side="left")
+                    tk.Label(pajak_row, text=f"Rp{pajak:,.0f}", font=FONT_BOLD, bg=BG_CARD3, fg=TEXT_PRIMARY).pack(side="right")
+                    
+                if layanan > 0:
+                    lyn_row = tk.Frame(detail, bg=BG_CARD3)
+                    lyn_row.pack(fill="x")
+                    tk.Label(lyn_row, text="Biaya Layanan:", font=FONT_BODY, bg=BG_CARD3, fg=TEXT_MUTED).pack(side="left")
+                    tk.Label(lyn_row, text=f"Rp{layanan:,.0f}", font=FONT_BOLD, bg=BG_CARD3, fg=TEXT_PRIMARY).pack(side="right")
+
             total_row = tk.Frame(detail, bg=BG_CARD3)
-            total_row.pack(fill="x")
+            total_row.pack(fill="x", pady=(4, 0))
             tk.Label(total_row, text="Total:", font=FONT_HEADER,
                      bg=BG_CARD3, fg=TEXT_MUTED).pack(side="left")
-            tk.Label(total_row, text=f"Rp{total:,.0f}",
+            tk.Label(total_row, text=f"Rp{grand_total:,.0f}",
                      font=FONT_LARGE, bg=BG_CARD3, fg=ACCENT_GREEN).pack(side="right")
+                     
+            pay_row = tk.Frame(detail, bg=BG_CARD3)
+            pay_row.pack(fill="x", pady=(4, 0))
+            tk.Label(pay_row, text=f"Metode Pembayaran: {pesanan.get('metode_pembayaran', 'Cash')}", font=FONT_BOLD, bg=BG_CARD3, fg=TEXT_PRIMARY).pack(side="left")
+            nominal = pesanan.get('nominal_pembayaran')
+            if not nominal:
+                nominal = grand_total
+            tk.Label(pay_row, text=f"Nominal: Rp{nominal:,.0f}", font=FONT_BOLD, bg=BG_CARD3, fg=ACCENT_GREEN).pack(side="right")
 
             # Status timeline & timestamps
             tk.Frame(detail, bg=BORDER_COLOR, height=1).pack(fill="x", pady=(10, 8))
