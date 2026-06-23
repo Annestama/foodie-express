@@ -28,6 +28,16 @@ uas-pbo/
 
 ---
 
+## ✨ Fitur-Fitur Utama
+
+1. **Auto-Polling (Real-Time Update):** Sinkronisasi status pesanan antara pembeli dan kasir otomatis tanpa refresh manual.
+2. **Pajak & Biaya Layanan:** Kasir dapat mengatur tarif pajak dan layanan restoran yang otomatis terhitung di keranjang belanja pengguna.
+3. **Simulasi Pembayaran Interaktif:** Pengguna harus mensimulasikan pembayaran (Cash, VA/QRIS, E-Wallet, Kartu Kredit) sebelum pesanan diproses.
+4. **Masa Tenggang Pembatalan (15 Detik):** Setelah *checkout*, pengguna diberi waktu 15 detik untuk membatalkan pesanan sebelum data otomatis dikirim ke restoran.
+5. **Manajemen Pembatalan Restoran:** Restoran dapat membatalkan pesanan masuk dengan mencantumkan **alasan pembatalan** yang akan langsung di-sync ke halaman riwayat pengguna.
+
+---
+
 ## 🚀 Cara Menjalankan
 
 ### 1. Jalankan User App (Aplikasi Pelanggan)
@@ -70,17 +80,19 @@ python restaurant_app.py
 
 ## 🔄 Alur Penggunaan
 
-```
+```text
 User App:
   Dashboard → Pilih Restoran
   → Menu → Tambah ke Keranjang
-  → Keranjang → Checkout
+  → Keranjang → Simulasi Pembayaran
+  → Tunggu 15 Detik (Bisa Dibatalkan) → Checkout
   → Lacak Pesanan (polling 5 detik)
 
 Restaurant App:
   Login → Pilih Restoran
+  → Pengaturan (Pajak & Layanan)
   → Dashboard Transaksi (polling 10 detik)
-  → Pilih Pesanan → Update Status
+  → Pilih Pesanan → Update Status / Batalkan dengan Alasan
   → Dikonfirmasi → Diproses → Dikirim
 ```
 
@@ -89,9 +101,9 @@ Restaurant App:
 ## 💾 Database (SQLite)
 
 Tabel:
-- `restoran` — Daftar restoran aktif
+- `restoran` — Daftar restoran aktif (termasuk kolom pajak & layanan)
 - `menu` — Daftar item menu per restoran
-- `pesanan` — Header transaksi pesanan
+- `pesanan` — Header transaksi pesanan (termasuk status & alasan pembatalan)
 - `detail_pesanan` — Line item per pesanan
 
 Database dibuat otomatis saat pertama kali app dijalankan.
